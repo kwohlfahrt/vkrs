@@ -1,0 +1,7 @@
+[package]
+name = "vkrs"
+version = "0.1.0"
+authors = ["Kai Wohlfahrt <kai.scorpio@gmail.com>"]
+
+[dependencies]
+libc = "~0.2.11"
