@@ -24,14 +24,19 @@ mod tests {
     #[test]
     fn enumerate_devices() {
         let instance = Instance::new(None, None).unwrap();
-        assert!(PhysicalDevice::enumerate(&instance).unwrap().len() > 0)
+        assert!(instance.devices().unwrap().len() > 0)
     }
 
     #[test]
     fn create_device() {
+        // Slightly convoluted, ensures lifetimes are correct
         let instance = Instance::new(None, None).unwrap();
-        let physical_devices = PhysicalDevice::enumerate(&instance).unwrap();
-        assert!(Device::new(&physical_devices[0]).is_ok());
+        let device;
+        {
+            let physical_devices = instance.devices().unwrap();
+            device = Device::new(&physical_devices[0]);
+        }
+        assert!(device.is_ok());
 
     }
 }

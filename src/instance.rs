@@ -34,6 +34,31 @@ impl Instance {
             }
         }
     }
+
+    pub fn devices<'a>(&'a self) -> Result<Vec<PhysicalDevice<'a>>, VkResult> {
+        let mut ndevices = 0;
+        unsafe {
+            match vkEnumeratePhysicalDevices(self.instance,
+                                             &mut ndevices,
+                                             ptr::null_mut()) {
+                VkResult::VK_SUCCESS => {}
+                x => return Err(x)
+            };
+        }
+        let mut devices = Vec::<VkPhysicalDevice>::with_capacity(ndevices as usize);
+        unsafe {
+            match vkEnumeratePhysicalDevices(self.instance,
+                                             &mut (devices.capacity() as u32),
+                                             devices.as_mut_ptr()) {
+                VkResult::VK_SUCCESS => {}
+                x => return Err(x)
+            };
+            devices.set_len(ndevices as usize);
+        }
+        devices.into_iter().map(|dev| {
+            Ok(PhysicalDevice{physical_device: dev, instance: PhantomData})
+        }).collect()
+    }
 }
 
 impl Drop for Instance {
@@ -84,33 +109,6 @@ pub struct PhysicalDevice<'a> {
     // FIXME: Is it possible to make this public for crate only
     pub physical_device: VkPhysicalDevice,
     instance: PhantomData<&'a Instance>
-}
-
-impl<'a> PhysicalDevice<'a> {
-    pub fn enumerate(instance: &'a Instance) -> Result<Vec<Self>, VkResult> {
-        let mut ndevices = 0;
-        unsafe {
-            match vkEnumeratePhysicalDevices(instance.instance,
-                                             &mut ndevices,
-                                             ptr::null_mut()) {
-                VkResult::VK_SUCCESS => {}
-                x => return Err(x)
-            };
-        }
-        let mut devices = Vec::<VkPhysicalDevice>::with_capacity(ndevices as usize);
-        unsafe {
-            match vkEnumeratePhysicalDevices(instance.instance,
-                                             &mut (devices.capacity() as u32),
-                                             devices.as_mut_ptr()) {
-                VkResult::VK_SUCCESS => {}
-                x => return Err(x)
-            };
-            devices.set_len(ndevices as usize);
-        }
-        devices.into_iter().map(|dev| {
-            Ok(PhysicalDevice{physical_device: dev, instance: PhantomData})
-        }).collect()
-    }
 }
 
 pub type VkPhysicalDevice = usize;
