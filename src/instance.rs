@@ -2,10 +2,10 @@ extern crate libc;
 use self::libc::{c_uchar, uint32_t, c_void};
 use std::ptr;
 use common::{VkStructureType, VkResult, VkAllocationCallbacks, VK_NULL_HANDLE};
+use std::marker::PhantomData;
 
 pub struct Instance {
-    // FIXME: Is it possible to make this public for crate only
-    pub instance: VkInstance,
+    instance: VkInstance,
 }
 
 impl Instance {
@@ -72,10 +72,50 @@ struct VkInstanceCreateInfo {
     pp_enabled_extension_names: *const *const c_uchar,
 }
 
-pub type VkInstance = usize;
+type VkInstance = usize;
 
 #[link(name="vulkan")]
 extern {
     fn vkCreateInstance(create_info: *const VkInstanceCreateInfo, p_allocator: *const VkAllocationCallbacks, p_instance: *mut VkInstance) -> VkResult;
     fn vkDestroyInstance(instance: VkInstance, p_allocator: *const VkAllocationCallbacks);
+}
+
+pub struct PhysicalDevice<'a> {
+    // FIXME: Is it possible to make this public for crate only
+    pub physical_device: VkPhysicalDevice,
+    instance: PhantomData<&'a Instance>
+}
+
+impl<'a> PhysicalDevice<'a> {
+    pub fn enumerate(instance: &'a Instance) -> Result<Vec<Self>, VkResult> {
+        let mut ndevices = 0;
+        unsafe {
+            match vkEnumeratePhysicalDevices(instance.instance,
+                                             &mut ndevices,
+                                             ptr::null_mut()) {
+                VkResult::VK_SUCCESS => {}
+                x => return Err(x)
+            };
+        }
+        let mut devices = Vec::<VkPhysicalDevice>::with_capacity(ndevices as usize);
+        unsafe {
+            match vkEnumeratePhysicalDevices(instance.instance,
+                                             &mut (devices.capacity() as u32),
+                                             devices.as_mut_ptr()) {
+                VkResult::VK_SUCCESS => {}
+                x => return Err(x)
+            };
+            devices.set_len(ndevices as usize);
+        }
+        devices.into_iter().map(|dev| {
+            Ok(PhysicalDevice{physical_device: dev, instance: PhantomData})
+        }).collect()
+    }
+}
+
+pub type VkPhysicalDevice = usize;
+
+#[link(name="vulkan")]
+extern {
+    fn vkEnumeratePhysicalDevices(instance: VkInstance, p_physical_device_count: *mut uint32_t, p_physical_devices: *mut VkPhysicalDevice) -> VkResult;
 }

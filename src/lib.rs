@@ -2,8 +2,8 @@ mod common;
 mod instance;
 mod device;
 
-pub use instance::Instance;
-pub use device::{PhysicalDevice, Device};
+pub use instance::{Instance, PhysicalDevice};
+pub use device::Device;
 
 #[cfg(test)]
 mod tests {
