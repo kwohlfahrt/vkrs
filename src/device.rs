@@ -1,15 +1,17 @@
 extern crate libc;
-use self::libc::{uint32_t};
-use common::{VkResult};
+use self::libc::{uint32_t, c_uchar, c_void, c_float};
+use common::{VkResult, VkStructureType, VkBool32, VkAllocationCallbacks, VK_NULL_HANDLE};
 use instance::{VkInstance, Instance};
+use std::marker::PhantomData;
 use std::ptr;
 
-pub struct PhysicalDevice {
-    physical_device: VkPhysicalDevice
+pub struct PhysicalDevice<'a> {
+    physical_device: VkPhysicalDevice,
+    instance: PhantomData<&'a Instance>
 }
 
-impl PhysicalDevice {
-    pub fn enumerate(instance: &Instance) -> Result<Vec<Self>, VkResult> {
+impl<'a> PhysicalDevice<'a> {
+    pub fn enumerate(instance: &'a Instance) -> Result<Vec<Self>, VkResult> {
         let mut ndevices = 0;
         unsafe {
             match vkEnumeratePhysicalDevices(instance.instance,
@@ -29,7 +31,9 @@ impl PhysicalDevice {
             };
             devices.set_len(ndevices as usize);
         }
-        devices.into_iter().map(|dev| {Ok(PhysicalDevice{physical_device: dev})}).collect()
+        devices.into_iter().map(|dev| {
+            Ok(PhysicalDevice{physical_device: dev, instance: PhantomData})
+        }).collect()
     }
 }
 
