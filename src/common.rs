@@ -126,3 +126,15 @@ pub struct VkAllocationCallbacks {
     pfn_internal_free: extern "C" fn(*mut c_void, size_t, VkInternalAllocationType,
                                    VkSystemAllocationScope),
 }
+
+#[repr(u32)]
+pub enum VkBool32{
+    False = 0,
+    True = 1,
+}
+
+impl Default for VkBool32 {
+    fn default() -> Self {
+        VkBool32::False
+    }
+}
