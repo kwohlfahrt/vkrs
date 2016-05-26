@@ -5,6 +5,7 @@ use self::libc::{size_t, c_void};
 
 pub const VK_NULL_HANDLE : usize = 0;
 
+#[derive(Debug)]
 #[repr(C)]
 pub enum VkResult {
     VK_SUCCESS = 0,
