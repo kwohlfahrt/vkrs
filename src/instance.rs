@@ -4,7 +4,8 @@ use std::ptr;
 use common::{VkStructureType, VkResult, VkAllocationCallbacks, VK_NULL_HANDLE};
 
 pub struct Instance {
-    instance: VkInstance,
+    // FIXME: Is it possible to make this public for crate only
+    pub instance: VkInstance,
 }
 
 impl Instance {
@@ -71,7 +72,7 @@ struct VkInstanceCreateInfo {
     pp_enabled_extension_names: *const *const c_uchar,
 }
 
-type VkInstance = usize;
+pub type VkInstance = usize;
 
 #[link(name="vulkan")]
 extern {
