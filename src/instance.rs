@@ -50,14 +50,13 @@ impl Instance {
             match vkEnumeratePhysicalDevices(self.handle,
                                              &mut (devices.capacity() as u32),
                                              devices.as_mut_ptr()) {
-                VkResult::VK_SUCCESS => {}
+                VkResult::VK_SUCCESS => {devices.set_len(ndevices as usize);}
                 x => return Err(x)
             };
-            devices.set_len(ndevices as usize);
         }
-        devices.into_iter().map(|dev| {
-            Ok(PhysicalDevice{handle: dev, instance: PhantomData})
-        }).collect()
+        Ok(devices.into_iter().map(|dev| {
+            PhysicalDevice{handle: dev, instance: PhantomData}
+        }).collect())
     }
 
     pub fn handle(&self) -> &VkInstance {&self.handle}
