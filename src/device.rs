@@ -129,7 +129,7 @@ mod tests {
     #[test]
     fn get_invalid_queue() {
         let instance = Instance::new(None, None).unwrap();
-        let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<u32, Vec<QueuePriority>>>();
+        let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
         let device = Device::new(&instance.devices().unwrap()[0], priorities).unwrap();
         assert!(device.get_queue(0, 1).is_none());
         assert!(device.get_queue(1, 0).is_none());
