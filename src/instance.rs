@@ -79,6 +79,12 @@ impl<'a> PhysicalDevice<'a> {
     pub fn handle(&self) -> &VkPhysicalDevice {&self.handle}
 }
 
+pub fn debug_instance() -> Instance {
+    let exts = vec!("VK_EXT_debug_report");
+    let layers = vec!("VK_LAYER_LUNARG_standard_validation");
+    Instance::new(layers, exts).unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use instance::*;
@@ -102,7 +108,11 @@ mod tests {
 
     #[test]
     fn enumerate_devices() {
-        let instance = Instance::new(None, None).unwrap();
-        assert!(instance.devices().unwrap().len() > 0)
+        use debug::{stderr_printer, DebugReportCallbackEXT, DebugReportFlagsEXT};
+
+        let instance = debug_instance();
+        let _ = DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).unwrap();
+
+        assert!(instance.devices().unwrap().len() > 0);
     }
 }

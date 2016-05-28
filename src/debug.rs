@@ -67,16 +67,13 @@ pub extern "C" fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDe
 
 #[cfg(test)]
 mod tests {
-    use instance::Instance;
+    use instance::{Instance, debug_instance};
     use debug::*;
 
     #[test]
     fn create_debug_report() {
-        let instance = {
-            let exts = vec!("VK_EXT_debug_report");
-            Instance::new(None, exts).unwrap()
-        };
-        assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).is_ok())
+        let instance = debug_instance();
+        assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).is_ok());
     }
 
     #[test]
