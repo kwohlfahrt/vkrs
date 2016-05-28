@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn create_debug_report_fail() {
+    fn missing_extension() {
         let instance = Instance::new(None, None).unwrap();
         assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).is_err())
     }
