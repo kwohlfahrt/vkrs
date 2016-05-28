@@ -5,7 +5,7 @@ use std::ptr;
 use std::marker::PhantomData;
 
 pub struct Instance {
-    instance: VkInstance,
+    handle: VkInstance,
 }
 
 impl Instance {
@@ -29,7 +29,7 @@ impl Instance {
         let mut instance = VK_NULL_HANDLE;
         unsafe {
             match vkCreateInstance(&create_info, ptr::null(), &mut instance) {
-                VkResult::VK_SUCCESS => Ok(Instance{instance: instance}),
+                VkResult::VK_SUCCESS => Ok(Instance{handle: instance}),
                 x => Err(x),
             }
         }
@@ -38,7 +38,7 @@ impl Instance {
     pub fn devices<'a>(&'a self) -> Result<Vec<PhysicalDevice<'a>>, VkResult> {
         let mut ndevices = 0;
         unsafe {
-            match vkEnumeratePhysicalDevices(self.instance,
+            match vkEnumeratePhysicalDevices(self.handle,
                                              &mut ndevices,
                                              ptr::null_mut()) {
                 VkResult::VK_SUCCESS => {}
@@ -47,7 +47,7 @@ impl Instance {
         }
         let mut devices = Vec::<VkPhysicalDevice>::with_capacity(ndevices as usize);
         unsafe {
-            match vkEnumeratePhysicalDevices(self.instance,
+            match vkEnumeratePhysicalDevices(self.handle,
                                              &mut (devices.capacity() as u32),
                                              devices.as_mut_ptr()) {
                 VkResult::VK_SUCCESS => {}
@@ -56,21 +56,26 @@ impl Instance {
             devices.set_len(ndevices as usize);
         }
         devices.into_iter().map(|dev| {
-            Ok(PhysicalDevice{physical_device: dev, instance: PhantomData})
+            Ok(PhysicalDevice{handle: dev, instance: PhantomData})
         }).collect()
     }
+
+    pub fn handle(&self) -> &VkInstance {&self.handle}
 }
 
 impl Drop for Instance {
     fn drop(&mut self) {
         unsafe {
-            vkDestroyInstance(self.instance, ptr::null())
+            vkDestroyInstance(self.handle, ptr::null())
         }
     }
 }
 
 pub struct PhysicalDevice<'a> {
-    // FIXME: Is it possible to make this public for crate only
-    pub physical_device: VkPhysicalDevice,
+    handle: VkPhysicalDevice,
     instance: PhantomData<&'a Instance>
+}
+
+impl<'a> PhysicalDevice<'a> {
+    pub fn handle(&self) -> &VkPhysicalDevice {&self.handle}
 }

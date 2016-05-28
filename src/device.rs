@@ -22,7 +22,7 @@ impl QueuePriority {
 }
 
 pub struct Device<'a> {
-    pub device: VkDevice,
+    handle: VkDevice,
     nqueues: HashMap<u32, u32>,
     physical_device: PhantomData<&'a PhysicalDevice<'a>>
 }
@@ -61,9 +61,9 @@ impl<'a> Device<'a> {
 
         let mut device = VK_NULL_HANDLE;
         unsafe {
-            match vkCreateDevice(physical_device.physical_device,
+            match vkCreateDevice(*physical_device.handle(),
                                  &create_info, ptr::null(), &mut device) {
-                VkResult::VK_SUCCESS => Ok(Device{device: device,
+                VkResult::VK_SUCCESS => Ok(Device{handle: device,
                                                   physical_device: PhantomData,
                                                   nqueues: nqueues}),
                 x => Err(x)
@@ -76,18 +76,20 @@ impl<'a> Device<'a> {
             None => None,
             Some(nqueues) if index < *nqueues => {
                 let mut queue = VK_NULL_HANDLE;
-                unsafe {vkGetDeviceQueue(self.device, family, index, &mut queue);}
+                unsafe {vkGetDeviceQueue(self.handle, family, index, &mut queue);}
                 Some(Queue{queue: queue, device: PhantomData})
             }
             Some(_) => None
         }
     }
+
+    pub fn handle(&self) -> &VkDevice {&self.handle}
 }
 
 impl<'a> Drop for Device<'a> {
     fn drop(&mut self) {
         unsafe {
-            vkDestroyDevice(self.device, ptr::null())
+            vkDestroyDevice(self.handle, ptr::null())
         }
     }
 }
