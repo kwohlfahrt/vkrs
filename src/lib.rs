@@ -18,8 +18,13 @@ mod tests {
     #[test]
     fn create_layers() {
         let layers = vec!("VK_LAYER_LUNARG_standard_validation");
+        assert!(Instance::new(layers, None).is_ok());
+    }
+
+    #[test]
+    fn create_ext() {
         let exts = vec!("VK_EXT_debug_report");
-        assert!(Instance::new(layers, exts).is_ok());
+        assert!(Instance::new(None, exts).is_ok());
     }
 
     #[test]

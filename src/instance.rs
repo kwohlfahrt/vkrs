@@ -9,8 +9,8 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new<'a, L>(layers: L, extensions: L) -> Result<Self, VkResult>
-        where L: IntoIterator<Item=&'a str>
+    pub fn new<'a, L, E>(layers: L, extensions: E) -> Result<Self, VkResult>
+        where L: IntoIterator<Item=&'a str>, E: IntoIterator<Item=&'a str>
     {
         let layers = layers.into_iter().map(str::as_ptr).collect::<Vec<_>>();
         let extensions = extensions.into_iter().map(str::as_ptr).collect::<Vec<_>>();
