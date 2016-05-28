@@ -10,6 +10,8 @@ use std::ptr;
 use std::io::{self, Write};
 use std::mem::transmute;
 
+pub type DebugReportFlagsEXT = VkDebugReportFlagsEXT;
+
 pub struct DebugReportCallbackEXT<'a> {
     callback: VkDebugReportCallbackEXT,
     instance: &'a Instance,
@@ -68,19 +70,18 @@ pub extern "C" fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDe
 mod tests {
     use instance::Instance;
     use debug::*;
-    use sys::debug::VkDebugReportFlagsEXT;
 
     #[test]
     fn create_debug_report() {
         let exts = vec!("VK_EXT_debug_report");
         let instance = Instance::new(None, exts).unwrap();
-        assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, VkDebugReportFlagsEXT::all()).is_ok())
+        assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).is_ok())
     }
 
     #[test]
     fn create_debug_report_fail() {
         let instance = Instance::new(None, None).unwrap();
-        assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, VkDebugReportFlagsEXT::all()).is_err())
+        assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).is_err())
     }
 
 }
