@@ -1,6 +1,6 @@
-mod common;
 mod instance;
 mod device;
+mod sys;
 
 pub use instance::{Instance, PhysicalDevice};
 pub use device::{Device, QueuePriority};

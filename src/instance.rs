@@ -1,7 +1,7 @@
-extern crate libc;
-use self::libc::{c_uchar, uint32_t, c_void};
+use sys::common::{VkStructureType, VkResult, VK_NULL_HANDLE};
+use sys::instance::*;
+
 use std::ptr;
-use common::{VkStructureType, VkResult, VkAllocationCallbacks, VK_NULL_HANDLE};
 use std::marker::PhantomData;
 
 pub struct Instance {
@@ -69,51 +69,8 @@ impl Drop for Instance {
     }
 }
 
-#[repr(C)]
-enum VkInstanceCreateFlags {
-    Reserved = 0,
-}
-
-#[repr(C)]
-struct VkApplicationInfo {
-    s_type: VkStructureType,
-    p_next: *const c_void,
-    p_application_name: *const c_uchar,
-    application_version: uint32_t,
-    p_engine_name: *const c_uchar,
-    engine_version: uint32_t,
-    api_version: uint32_t,
-}
-
-#[repr(C)]
-struct VkInstanceCreateInfo {
-    s_type: VkStructureType,
-    p_next: *const c_void,
-    flags: VkInstanceCreateFlags,
-    p_application_info: *const VkApplicationInfo,
-    enabled_layer_count: uint32_t,
-    pp_enabled_layer_names: *const *const c_uchar,
-    enabled_extension_count: uint32_t,
-    pp_enabled_extension_names: *const *const c_uchar,
-}
-
-type VkInstance = usize;
-
-#[link(name="vulkan")]
-extern {
-    fn vkCreateInstance(create_info: *const VkInstanceCreateInfo, p_allocator: *const VkAllocationCallbacks, p_instance: *mut VkInstance) -> VkResult;
-    fn vkDestroyInstance(instance: VkInstance, p_allocator: *const VkAllocationCallbacks);
-}
-
 pub struct PhysicalDevice<'a> {
     // FIXME: Is it possible to make this public for crate only
     pub physical_device: VkPhysicalDevice,
     instance: PhantomData<&'a Instance>
-}
-
-pub type VkPhysicalDevice = usize;
-
-#[link(name="vulkan")]
-extern {
-    fn vkEnumeratePhysicalDevices(instance: VkInstance, p_physical_device_count: *mut uint32_t, p_physical_devices: *mut VkPhysicalDevice) -> VkResult;
 }
