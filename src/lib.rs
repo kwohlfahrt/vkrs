@@ -1,9 +1,15 @@
+#[macro_use]
+extern crate bitflags;
+
 mod instance;
 mod device;
 mod sys;
+mod debug;
 
 pub use instance::{Instance, PhysicalDevice};
 pub use device::{Device, QueuePriority};
+pub use debug::{DebugReportCallbackEXT, stderr_printer};
+pub use sys::debug::VkDebugReportFlagsEXT;
 
 #[cfg(test)]
 mod tests {
@@ -13,6 +19,19 @@ mod tests {
     #[test]
     fn create_instance() {
         assert!(Instance::new(None, None).is_ok());
+    }
+
+    #[test]
+    fn create_debug_report() {
+        let exts = vec!("VK_EXT_debug_report");
+        let instance = Instance::new(None, exts).unwrap();
+        assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, VkDebugReportFlagsEXT::all()).is_ok())
+    }
+
+    #[test]
+    fn create_debug_report_fail() {
+        let instance = Instance::new(None, None).unwrap();
+        assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, VkDebugReportFlagsEXT::all()).is_err())
     }
 
     #[test]

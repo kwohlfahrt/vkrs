@@ -5,3 +5,4 @@ authors = ["Kai Wohlfahrt <kai.scorpio@gmail.com>"]
 
 [dependencies]
 libc = "~0.2.11"
+bitflags = "~0.7.0"

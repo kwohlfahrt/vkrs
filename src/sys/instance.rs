@@ -41,7 +41,10 @@ pub struct VkInstanceCreateInfo {
 
 pub type VkPhysicalDevice = usize;
 
+pub type PFNvkVoidFunction = extern fn() -> c_void;
+
 #[link(name="vulkan")]
 extern {
     pub fn vkEnumeratePhysicalDevices(instance: VkInstance, p_physical_device_count: *mut uint32_t, p_physical_devices: *mut VkPhysicalDevice) -> VkResult;
+    pub fn vkGetInstanceProcAddr(instance: VkInstance, p_name: *const c_uchar) -> Option<PFNvkVoidFunction>;
 }

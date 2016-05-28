@@ -1,9 +1,10 @@
 #![allow(dead_code)]
 
 extern crate libc;
-use self::libc::{size_t, c_void};
+use self::libc::{size_t, uint32_t, c_void};
 
 pub const VK_NULL_HANDLE : usize = 0;
+pub type VkFlags = uint32_t;
 
 #[derive(Debug)]
 #[repr(C)]
