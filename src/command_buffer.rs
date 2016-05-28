@@ -63,8 +63,10 @@ mod test {
     #[test]
     fn allocate_command_buffer() {
         let instance = Instance::new(None, None).unwrap();
-        let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
-        let device = Device::new(&instance.devices().unwrap()[0], priorities).unwrap();
+        let device = {
+            let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
+            Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
+        };
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         assert!(PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap().len() > 0);
     }
@@ -72,8 +74,10 @@ mod test {
     #[test]
     fn reset_command_buffer() {
         let instance = Instance::new(None, None).unwrap();
-        let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
-        let device = Device::new(&instance.devices().unwrap()[0], priorities).unwrap();
+        let device = {
+            let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
+            Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
+        };
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         let ref buf = PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap()[0];
         buf.reset(CommandBufferResetFlags::empty());

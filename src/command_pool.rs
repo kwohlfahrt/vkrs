@@ -60,16 +60,20 @@ mod test {
     #[test]
     fn create_command_pool() {
         let instance = Instance::new(None, None).unwrap();
-        let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
-        let device = Device::new(&instance.devices().unwrap()[0], priorities).unwrap();
+        let device = {
+            let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
+            Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
+        };
         assert!(CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).is_ok());
     }
 
     #[test]
     fn reset_command_pool() {
         let instance = Instance::new(None, None).unwrap();
-        let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
-        let device = Device::new(&instance.devices().unwrap()[0], priorities).unwrap();
+        let device = {
+            let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
+            Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
+        };
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         cmd_pool.reset(CommandPoolResetFlags::empty());
     }

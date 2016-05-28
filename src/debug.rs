@@ -65,7 +65,6 @@ pub extern "C" fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDe
     VkBool32::False
 }
 
-
 #[cfg(test)]
 mod tests {
     use instance::Instance;
@@ -73,8 +72,10 @@ mod tests {
 
     #[test]
     fn create_debug_report() {
-        let exts = vec!("VK_EXT_debug_report");
-        let instance = Instance::new(None, exts).unwrap();
+        let instance = {
+            let exts = vec!("VK_EXT_debug_report");
+            Instance::new(None, exts).unwrap()
+        };
         assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).is_ok())
     }
 
@@ -83,5 +84,4 @@ mod tests {
         let instance = Instance::new(None, None).unwrap();
         assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).is_err())
     }
-
 }
