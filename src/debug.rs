@@ -59,9 +59,11 @@ impl<'a> Drop for DebugReportCallbackEXT<'a> {
 }
 
 #[allow(unused_variables)]
+#[allow(unused_must_use)] // Can't really deal with failure to write
 pub extern "C" fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, p_layer_prefix: *const c_char, p_message: *const c_char, p_user_data: *mut c_void) -> VkBool32 {
     let message = unsafe{CStr::from_ptr(p_message).to_bytes_with_nul()};
-    io::stderr().write(message).unwrap();
+    io::stderr().write(message);
+    io::stderr().flush();
     VkBool32::False
 }
 
