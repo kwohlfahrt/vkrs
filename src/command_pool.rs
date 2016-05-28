@@ -39,6 +39,7 @@ impl<'a> CommandPool<'a> {
     }
 
     pub fn handle(&self) -> &VkCommandPool {&self.handle}
+    pub fn device(&self) -> &Device<'a> {self.device}
 }
 
 impl <'a> Drop for CommandPool<'a> {
