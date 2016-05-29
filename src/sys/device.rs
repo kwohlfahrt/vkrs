@@ -1,5 +1,5 @@
 extern crate libc;
-use self::libc::{c_void, uint32_t, c_float, c_uchar};
+use self::libc::{c_void, uint32_t, c_float, c_char};
 
 use sys::common::{VkBool32, VkStructureType, VkResult, VkAllocationCallbacks};
 use sys::instance::{VkPhysicalDevice};
@@ -95,9 +95,9 @@ pub struct VkDeviceCreateInfo {
     pub queue_create_info_count: uint32_t,
     pub p_queue_create_infos: *const VkDeviceQueueCreateInfo,
     pub enabled_layer_count: uint32_t,
-    pub pp_enabled_layer_names: *const *const c_uchar,
+    pub pp_enabled_layer_names: *const *const c_char,
     pub enabled_extension_count: uint32_t,
-    pub pp_enabled_extension_names: *const *const c_uchar,
+    pub pp_enabled_extension_names: *const *const c_char,
     pub p_enabled_features: *const VkPhysicalDeviceFeatures,
 }
 

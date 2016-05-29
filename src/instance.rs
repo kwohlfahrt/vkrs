@@ -3,6 +3,7 @@ use sys::instance::*;
 
 use std::ptr;
 use std::marker::PhantomData;
+use std::ffi::CString;
 
 pub struct Instance {
     handle: VkInstance,
@@ -10,10 +11,10 @@ pub struct Instance {
 
 impl Instance {
     pub fn new<'a, L, E>(layers: L, extensions: E) -> Result<Self, VkResult>
-        where L: IntoIterator<Item=&'a str>, E: IntoIterator<Item=&'a str>
+        where L: IntoIterator<Item=&'a CString>, E: IntoIterator<Item=&'a CString>
     {
-        let layers = layers.into_iter().map(str::as_ptr).collect::<Vec<_>>();
-        let extensions = extensions.into_iter().map(str::as_ptr).collect::<Vec<_>>();
+        let layers = layers.into_iter().map(|s| s.as_ptr()).collect::<Vec<_>>();
+        let extensions = extensions.into_iter().map(|s| s.as_ptr()).collect::<Vec<_>>();
 
         let create_info = VkInstanceCreateInfo {
             s_type: VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -80,14 +81,15 @@ impl<'a> PhysicalDevice<'a> {
 }
 
 pub fn debug_instance() -> Instance {
-    let exts = vec!("VK_EXT_debug_report");
-    let layers = vec!("VK_LAYER_LUNARG_standard_validation");
-    Instance::new(layers, exts).unwrap()
+    let exts = vec!(CString::new("VK_EXT_debug_report").unwrap());
+    let layers = vec!(CString::new("VK_LAYER_LUNARG_standard_validation").unwrap());
+    Instance::new(layers.iter(), exts.iter()).unwrap()
 }
 
 #[cfg(test)]
 mod tests {
     use instance::*;
+    use std::ffi::CString;
 
     #[test]
     fn create_instance() {
@@ -96,14 +98,14 @@ mod tests {
 
     #[test]
     fn create_layers() {
-        let layers = vec!("VK_LAYER_LUNARG_standard_validation");
-        assert!(Instance::new(layers, None).is_ok());
+        let layers = vec!(CString::new("VK_LAYER_LUNARG_standard_validation").unwrap());
+        assert!(Instance::new(layers.iter(), None).is_ok());
     }
 
     #[test]
     fn create_ext() {
-        let exts = vec!("VK_EXT_debug_report");
-        assert!(Instance::new(None, exts).is_ok());
+        let exts = vec!(CString::new("VK_EXT_debug_report").unwrap());
+        assert!(Instance::new(None, exts.iter()).is_ok());
     }
 
     #[test]

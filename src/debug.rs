@@ -1,6 +1,6 @@
 extern crate libc;
 use self::libc::{c_char, uint64_t, int32_t, c_void, size_t};
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use sys::common::{VkStructureType, VkResult, VK_NULL_HANDLE, VkBool32};
 use sys::instance::{vkGetInstanceProcAddr, PFNvkVoidFunction};
 use sys::debug::*;
@@ -29,16 +29,18 @@ impl<'a> DebugReportCallbackEXT<'a> {
         };
 
         let create_fn : PFNvkCreateDebugReportCallbackEXT;
+        let create_name = CString::new("vkCreateDebugReportCallbackEXT").unwrap();
         let destroy_fn : PFNvkDestroyDebugReportCallbackEXT;
+        let destroy_name = CString::new("vkDestroyDebugReportCallbackEXT").unwrap();
 
         unsafe {
             create_fn = transmute::<PFNvkVoidFunction, PFNvkCreateDebugReportCallbackEXT>(
-                match vkGetInstanceProcAddr(*instance.handle(), "vkCreateDebugReportCallbackEXT".as_ptr()) {
+                match vkGetInstanceProcAddr(*instance.handle(), create_name.as_ptr()) {
                     None => return Err(VkResult::VK_ERROR_EXTENSION_NOT_PRESENT),
                     Some(x) => x,
                 });
             destroy_fn = transmute::<PFNvkVoidFunction, PFNvkDestroyDebugReportCallbackEXT>(
-                match vkGetInstanceProcAddr(*instance.handle(), "vkDestroyDebugReportCallbackEXT".as_ptr()) {
+                match vkGetInstanceProcAddr(*instance.handle(), destroy_name.as_ptr()) {
                     None => return Err(VkResult::VK_ERROR_EXTENSION_NOT_PRESENT),
                     Some(x) => x,
                 });
@@ -61,7 +63,7 @@ impl<'a> Drop for DebugReportCallbackEXT<'a> {
 #[allow(unused_variables)]
 #[allow(unused_must_use)] // Can't really deal with failure to write
 pub extern "C" fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, p_layer_prefix: *const c_char, p_message: *const c_char, p_user_data: *mut c_void) -> VkBool32 {
-    let message = unsafe{CStr::from_ptr(p_message).to_bytes_with_nul()};
+    let message = unsafe{CStr::from_ptr(p_message).to_bytes()};
     io::stderr().write(message);
     io::stderr().write(b"\n"); // Works if this line is removed.
     io::stderr().flush();
