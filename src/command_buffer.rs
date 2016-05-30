@@ -92,7 +92,9 @@ impl<'a> Drop for PrimaryCommandBufferGroup<'a> {
 
 #[cfg(test)]
 mod test {
-    use instance::Instance;
+    use instance::debug_instance;
+    use debug::debug_monitor;
+
     use device::{Device, QueuePriority};
     use std::collections::HashMap;
     use command_pool::{CommandPool, CommandPoolCreateFlags};
@@ -100,18 +102,23 @@ mod test {
 
     #[test]
     fn allocate_command_buffer() {
-        let instance = Instance::new(None, None).unwrap();
+        let instance = debug_instance();
+        let (errs, dbg) = debug_monitor(&instance);
+
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         assert!(PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap().len() > 0);
+        drop(dbg);
+        assert!(errs.recv().is_err());
     }
 
     #[test]
     fn reset_command_buffer() {
-        let instance = Instance::new(None, None).unwrap();
+        let instance = debug_instance();
+        let (errs, dbg) = debug_monitor(&instance);
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
@@ -119,16 +126,22 @@ mod test {
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         let ref buf = PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap()[0];
         buf.reset(CommandBufferResetFlags::empty());
+        drop(dbg);
+        assert!(errs.recv().is_err());
     }
 
     #[test]
     fn allocate_command_buffer_group() {
-        let instance = Instance::new(None, None).unwrap();
+        let instance = debug_instance();
+        let (errs, dbg) = debug_monitor(&instance);
+
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         assert!(PrimaryCommandBufferGroup::allocate(&cmd_pool, 1).unwrap().len() > 0);
+        drop(dbg);
+        assert!(errs.recv().is_err());
     }
 }

@@ -84,6 +84,20 @@ pub fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportOb
     VkBool32::False
 }
 
+use std::sync::mpsc::Receiver;
+pub fn debug_monitor<'a>(instance: &'a Instance) -> (Receiver<CString>, DebugReportCallbackEXT<'a, 'a>) {
+    use std::sync::mpsc::channel;
+    let (tx, rx) = channel();
+    let closure = move |_,_,_,_,_,_:&_, msg: &CStr| {
+        let _ = tx.send(msg.to_owned());
+        VkBool32::False
+    };
+    let flags = VkDebugReportFlagsEXT::all()
+        ^ VK_DEBUG_REPORT_DEBUG_BIT_EXT
+        ^ VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+    (rx, DebugReportCallbackEXT::new(instance, closure, flags).unwrap())
+}
+
 #[cfg(test)]
 mod tests {
     use instance::{Instance, debug_instance};
@@ -112,5 +126,13 @@ mod tests {
         }
         // Adding a callback triggers with the DEBUG level enabled triggers the callback
         assert!(flag)
+    }
+
+    #[test]
+    fn debug_monitor_ok() {
+        let instance = debug_instance();
+        let (errs, dbg) = debug_monitor(&instance);
+        drop(dbg);
+        assert!(errs.recv().is_err())
     }
 }

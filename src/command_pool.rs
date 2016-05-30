@@ -52,29 +52,39 @@ impl <'a> Drop for CommandPool<'a> {
 
 #[cfg(test)]
 mod test {
-    use instance::Instance;
+    use instance::debug_instance;
+    use debug::debug_monitor;
+
     use device::{Device, QueuePriority};
     use command_pool::*;
     use std::collections::HashMap;
 
     #[test]
     fn create_command_pool() {
-        let instance = Instance::new(None, None).unwrap();
+        let instance = debug_instance();
+        let (errs, dbg) = debug_monitor(&instance);
+
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
         assert!(CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).is_ok());
+        drop(dbg);
+        assert!(errs.recv().is_err());
     }
 
     #[test]
     fn reset_command_pool() {
-        let instance = Instance::new(None, None).unwrap();
+        let instance = debug_instance();
+        let (errs, dbg) = debug_monitor(&instance);
+
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         cmd_pool.reset(CommandPoolResetFlags::empty());
+        drop(dbg);
+        assert!(errs.recv().is_err());
     }
 }

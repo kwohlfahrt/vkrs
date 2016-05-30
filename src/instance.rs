@@ -91,6 +91,8 @@ mod tests {
     use instance::*;
     use std::ffi::CString;
 
+    use debug::debug_monitor;
+
     #[test]
     fn create_instance() {
         assert!(Instance::new(None, None).is_ok());
@@ -110,11 +112,10 @@ mod tests {
 
     #[test]
     fn enumerate_devices() {
-        use debug::{stderr_printer, DebugReportCallbackEXT, DebugReportFlagsEXT};
-
         let instance = debug_instance();
-        let _ = DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).unwrap();
-
+        let (errs, dbg) = debug_monitor(&instance);
         assert!(instance.devices().unwrap().len() > 0);
+        drop(dbg);
+        assert!(errs.recv().is_err());
     }
 }
