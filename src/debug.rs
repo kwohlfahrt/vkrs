@@ -11,21 +11,34 @@ use std::io::{self, Write};
 use std::mem::transmute;
 
 pub type DebugReportFlagsEXT = VkDebugReportFlagsEXT;
+type PFNDebugReportCallbackEXT = FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32;
 
 pub struct DebugReportCallbackEXT<'a> {
-    callback: VkDebugReportCallbackEXT,
+    handle: VkDebugReportCallbackEXT,
     instance: &'a Instance,
     destructor: PFNvkDestroyDebugReportCallbackEXT,
+    user_data: *mut c_void,
+}
+
+extern fn callback_handler(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, p_layer_prefix: *const c_char, p_message: *const c_char, p_user_data: *mut c_void) -> VkBool32 {
+    let closure: &mut Box<PFNDebugReportCallbackEXT> = unsafe {transmute(p_user_data)};
+    let message = unsafe{CStr::from_ptr(p_message)};
+    let layer_prefix = unsafe{CStr::from_ptr(p_layer_prefix)};
+    closure(flags, object_type, object, location, message_code, layer_prefix, message)
 }
 
 impl<'a> DebugReportCallbackEXT<'a> {
-    pub fn new(instance: &'a Instance, callback: PFNvkDebugReportCallbackEXT, flags: VkDebugReportFlagsEXT) -> Result<Self, VkResult> {
+    pub fn new<F>(instance: &'a Instance, callback: F, flags: VkDebugReportFlagsEXT) -> Result<Self, VkResult>
+        where F: 'static, F: FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32
+    {
+        // Type annotation here is necessary
+        let callback : Box<Box<PFNDebugReportCallbackEXT>> = Box::new(Box::new(callback));
         let create_info = VkDebugReportCallbackCreateInfoEXT{
             s_type: VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
             p_next: ptr::null(),
             flags: flags,
-            pfn_callback: callback,
-            p_user_data: ptr::null_mut(),
+            pfn_callback: callback_handler,
+            p_user_data: Box::into_raw(callback) as *mut c_void,
         };
 
         let create_fn : PFNvkCreateDebugReportCallbackEXT;
@@ -46,9 +59,9 @@ impl<'a> DebugReportCallbackEXT<'a> {
                 });
         }
 
-        let mut callback = VK_NULL_HANDLE as VkDebugReportCallbackEXT;
-        match create_fn(*instance.handle(), &create_info, ptr::null(), &mut callback) {
-            VkResult::VK_SUCCESS => Ok(DebugReportCallbackEXT{callback: callback, instance: instance, destructor: destroy_fn}),
+        let mut handle = VK_NULL_HANDLE as VkDebugReportCallbackEXT;
+        match create_fn(*instance.handle(), &create_info, ptr::null(), &mut handle) {
+            VkResult::VK_SUCCESS => Ok(DebugReportCallbackEXT{handle: handle, instance: instance, destructor: destroy_fn, user_data: create_info.p_user_data}),
             x => Err(x),
         }
     }
@@ -56,16 +69,16 @@ impl<'a> DebugReportCallbackEXT<'a> {
 
 impl<'a> Drop for DebugReportCallbackEXT<'a> {
     fn drop(&mut self) {
-        (self.destructor)(*self.instance.handle(), self.callback, ptr::null());
+        (self.destructor)(*self.instance.handle(), self.handle, ptr::null());
+        let _ : Box<Box<PFNDebugReportCallbackEXT>> = unsafe{Box::from_raw(self.user_data as *mut _)};
     }
 }
 
 #[allow(unused_variables)]
 #[allow(unused_must_use)] // Can't really deal with failure to write
-pub extern "C" fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, p_layer_prefix: *const c_char, p_message: *const c_char, p_user_data: *mut c_void) -> VkBool32 {
-    let message = unsafe{CStr::from_ptr(p_message).to_bytes()};
-    io::stderr().write(message);
-    io::stderr().write(b"\n"); // Works if this line is removed.
+pub fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, layer_prefix: &CStr, message: &CStr) -> VkBool32 {
+    io::stderr().write(message.to_bytes());
+    io::stderr().write(b"\n");
     io::stderr().flush();
     VkBool32::False
 }
