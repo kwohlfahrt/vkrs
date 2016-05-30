@@ -13,12 +13,12 @@ use std::mem::transmute;
 pub type DebugReportFlagsEXT = VkDebugReportFlagsEXT;
 type PFNDebugReportCallbackEXT = FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32;
 
-pub struct DebugReportCallbackEXT<'a> {
+pub struct DebugReportCallbackEXT<'a, 'b> {
     handle: VkDebugReportCallbackEXT,
     instance: &'a Instance,
     destructor: PFNvkDestroyDebugReportCallbackEXT,
     #[allow(dead_code)] // used in callback_handler
-    callback: Box<Box<PFNDebugReportCallbackEXT>>,
+    callback: Box<Box<FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b>>,
 }
 
 extern fn callback_handler(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, p_layer_prefix: *const c_char, p_message: *const c_char, p_user_data: *mut c_void) -> VkBool32 {
@@ -28,12 +28,13 @@ extern fn callback_handler(flags: VkDebugReportFlagsEXT, object_type: VkDebugRep
     closure(flags, object_type, object, location, message_code, layer_prefix, message)
 }
 
-impl<'a> DebugReportCallbackEXT<'a> {
+impl<'a, 'b> DebugReportCallbackEXT<'a, 'b> {
     pub fn new<F>(instance: &'a Instance, callback: F, flags: VkDebugReportFlagsEXT) -> Result<Self, VkResult>
-        where F: 'static + FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32
+        where F: FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b
     {
         // Type annotation here is necessary
-        let callback : Box<Box<PFNDebugReportCallbackEXT>> = Box::new(Box::new(callback));
+        let callback : Box<Box<FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b>>
+            = Box::new(Box::new(callback));
         let create_info = VkDebugReportCallbackCreateInfoEXT{
             s_type: VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
             p_next: ptr::null(),
@@ -68,7 +69,7 @@ impl<'a> DebugReportCallbackEXT<'a> {
     }
 }
 
-impl<'a> Drop for DebugReportCallbackEXT<'a> {
+impl<'a, 'b> Drop for DebugReportCallbackEXT<'a, 'b> {
     fn drop(&mut self) {
         (self.destructor)(*self.instance.handle(), self.handle, ptr::null());
     }
@@ -98,5 +99,18 @@ mod tests {
     fn missing_extension() {
         let instance = Instance::new(None, None).unwrap();
         assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).is_err())
+    }
+
+    #[test]
+    fn closure_callback() {
+        use sys::common::VkBool32;
+        let mut flag = false;
+        {
+            let instance = debug_instance();
+            let closure = |_, _, _, _, _, _: &_, _: &_| {flag = true; VkBool32::False};
+            DebugReportCallbackEXT::new(&instance, closure, DebugReportFlagsEXT::all()).unwrap();
+        }
+        // Adding a callback triggers with the DEBUG level enabled triggers the callback
+        assert!(flag)
     }
 }
