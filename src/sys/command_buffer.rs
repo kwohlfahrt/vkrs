@@ -1,6 +1,6 @@
 extern crate libc;
 use self::libc::{uint32_t, c_void};
-use sys::common::{VkFlags, VkStructureType, VkAllocationCallbacks, VkResult};
+use sys::common::{VkFlags, VkStructureType, VkResult};
 use sys::device::VkDevice;
 use sys::command_pool::VkCommandPool;
 
