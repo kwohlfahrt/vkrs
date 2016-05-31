@@ -17,6 +17,7 @@ pub struct DebugReportCallbackEXT<'a, 'b> {
     handle: VkDebugReportCallbackEXT,
     instance: &'a Instance,
     destructor: PFNvkDestroyDebugReportCallbackEXT,
+    message: PFNvkDebugReportMessageEXT,
     #[allow(dead_code)] // used in callback_handler
     callback: Box<Box<FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b>>,
 }
@@ -47,6 +48,8 @@ impl<'a, 'b> DebugReportCallbackEXT<'a, 'b> {
         let create_name = CString::new("vkCreateDebugReportCallbackEXT").unwrap();
         let destroy_fn : PFNvkDestroyDebugReportCallbackEXT;
         let destroy_name = CString::new("vkDestroyDebugReportCallbackEXT").unwrap();
+        let message_fn : PFNvkDebugReportMessageEXT;
+        let message_name = CString::new("vkDebugReportMessageEXT").unwrap();
 
         unsafe {
             create_fn = transmute::<PFNvkVoidFunction, PFNvkCreateDebugReportCallbackEXT>(
@@ -59,13 +62,24 @@ impl<'a, 'b> DebugReportCallbackEXT<'a, 'b> {
                     None => return Err(VkResult::VK_ERROR_EXTENSION_NOT_PRESENT),
                     Some(x) => x,
                 });
+            message_fn = transmute::<PFNvkVoidFunction, PFNvkDebugReportMessageEXT>(
+                match vkGetInstanceProcAddr(*instance.handle(), message_name.as_ptr()) {
+                    None => return Err(VkResult::VK_ERROR_EXTENSION_NOT_PRESENT),
+                    Some(x) => x,
+                });
         }
 
         let mut handle = VK_NULL_HANDLE as VkDebugReportCallbackEXT;
         match create_fn(*instance.handle(), &create_info, ptr::null(), &mut handle) {
-            VkResult::VK_SUCCESS => Ok(DebugReportCallbackEXT{handle: handle, instance: instance, destructor: destroy_fn, callback: callback}),
+            VkResult::VK_SUCCESS => Ok(DebugReportCallbackEXT{handle: handle, instance: instance, destructor: destroy_fn, message: message_fn, callback: callback}),
             x => Err(x),
         }
+    }
+
+    // FIXME: This acts per-instance, not per-callback.
+    // Move to Instance? Add a trait to Instance?
+    pub fn message(&self, flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, layer_prefix: &CStr, message: &CStr) {
+        (self.message)(*self.instance.handle(), flags, object_type, object, location, message_code, layer_prefix.as_ptr(), message.as_ptr());
     }
 }
 
@@ -129,10 +143,38 @@ mod tests {
     }
 
     #[test]
+    fn closure_message() {
+        use sys::debug::{VK_DEBUG_REPORT_ERROR_BIT_EXT, VkDebugReportObjectTypeEXT};
+        use sys::common::VkBool32;
+        use std::ffi::CString;
+
+        let mut flag = false;
+        {
+            let instance = debug_instance();
+            let closure = |_, _, _, _, _, _: &_, _: &_| {flag = true; VkBool32::False};
+            let dbg = DebugReportCallbackEXT::new(&instance, closure, DebugReportFlagsEXT::all()).unwrap();
+            dbg.message(VK_DEBUG_REPORT_ERROR_BIT_EXT, VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT, 0, 0, 0, &CString::new("").unwrap(), &CString::new("monitor").unwrap());
+        }
+        assert!(flag)
+    }
+
+    #[test]
     fn debug_monitor_ok() {
         let instance = debug_instance();
         let (errs, dbg) = debug_monitor(&instance);
         drop(dbg);
         assert!(errs.recv().is_err())
+    }
+
+    #[test]
+    fn debug_monitor_message() {
+        use sys::debug::{VK_DEBUG_REPORT_ERROR_BIT_EXT, VkDebugReportObjectTypeEXT};
+        use std::ffi::CString;
+
+        let instance = debug_instance();
+        let (errs, dbg) = debug_monitor(&instance);
+        dbg.message(VK_DEBUG_REPORT_ERROR_BIT_EXT, VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT, 0, 0, 0, &CString::new("").unwrap(), &CString::new("monitor").unwrap());
+        drop(dbg);
+        assert!(errs.recv().iter().count() == 1)
     }
 }

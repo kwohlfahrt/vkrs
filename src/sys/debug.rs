@@ -11,6 +11,8 @@ pub type PFNvkCreateDebugReportCallbackEXT = extern fn(instance: VkInstance, p_c
 
 pub type PFNvkDestroyDebugReportCallbackEXT = extern fn(instance: VkInstance, callback: VkDebugReportCallbackEXT, p_allocator: *const VkAllocationCallbacks);
 
+pub type PFNvkDebugReportMessageEXT = extern fn (instance: VkInstance, flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, p_layer_prefix: *const c_char, p_message: *const c_char);
+
 bitflags! {
     #[repr(C)]
     pub flags VkDebugReportFlagsEXT: VkFlags {
