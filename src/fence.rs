@@ -34,7 +34,7 @@ impl<'a> Fence<'a> {
         }
     }
 
-    pub fn reset(&self) -> Result<(), VkResult> {
+    pub fn reset(&mut self) -> Result<(), VkResult> {
         match unsafe{vkResetFences(*self.device.handle(), 1, &self.handle)} {
             VkResult::VK_SUCCESS => Ok(()),
             x => Err(x)
@@ -106,7 +106,7 @@ mod test {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
-        let fence = Fence::new(&device, true).unwrap();
+        let mut fence = Fence::new(&device, true).unwrap();
         assert!(fence.signaled().unwrap());
         fence.reset().unwrap();
         assert!(!fence.signaled().unwrap());
