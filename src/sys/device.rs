@@ -67,7 +67,7 @@ pub struct VkPhysicalDeviceFeatures {
     pub inherited_queries: VkBool32,
 }
 
-#[repr(C)]
+#[repr(u32)]
 pub enum VkDeviceQueueCreateFlags {
     Reserved = 0,
 }
@@ -82,7 +82,7 @@ pub struct VkDeviceQueueCreateInfo {
     pub p_queue_priorities: *const c_float,
 }
 
-#[repr(C)]
+#[repr(u32)]
 pub enum VkDeviceCreateFlags {
     Reserved = 0,
 }

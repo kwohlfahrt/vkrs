@@ -11,7 +11,7 @@ extern {
     pub fn vkDestroyInstance(instance: VkInstance, p_allocator: *const VkAllocationCallbacks);
 }
 
-#[repr(C)]
+#[repr(u32)]
 pub enum VkInstanceCreateFlags {
     Reserved = 0,
 }
