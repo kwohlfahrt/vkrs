@@ -1,4 +1,5 @@
 #[macro_use]
+// TODO: Track bitflags#20 for namespaced flags
 extern crate bitflags;
 
 pub mod instance;
