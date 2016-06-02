@@ -54,6 +54,7 @@ impl <'a> Drop for CommandPool<'a> {
 mod test {
     use instance::debug_instance;
     use debug::debug_monitor;
+    use std::sync::atomic::Ordering;
 
     use device::{Device, QueuePriority};
     use command_pool::*;
@@ -70,7 +71,7 @@ mod test {
         };
         assert!(CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).is_ok());
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 
     #[test]
@@ -85,6 +86,6 @@ mod test {
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         cmd_pool.reset(CommandPoolResetFlags::empty());
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 }

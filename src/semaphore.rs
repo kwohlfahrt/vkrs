@@ -33,6 +33,7 @@ impl<'a> Drop for Semaphore<'a> {
 mod test {
     use instance::debug_instance;
     use debug::debug_monitor;
+    use std::sync::atomic::Ordering;
 
     use device::{Device, QueuePriority};
     use std::collections::HashMap;
@@ -50,6 +51,6 @@ mod test {
         Semaphore::new(&device).unwrap();
 
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 }

@@ -90,6 +90,7 @@ pub fn debug_instance() -> Instance {
 mod tests {
     use instance::*;
     use std::ffi::CString;
+    use std::sync::atomic::Ordering;
 
     use debug::debug_monitor;
 
@@ -116,6 +117,6 @@ mod tests {
         let (errs, dbg) = debug_monitor(&instance);
         assert!(instance.devices().unwrap().len() > 0);
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 }

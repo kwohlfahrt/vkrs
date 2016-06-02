@@ -94,6 +94,7 @@ impl<'a> Drop for PrimaryCommandBufferGroup<'a> {
 mod test {
     use instance::debug_instance;
     use debug::debug_monitor;
+    use std::sync::atomic::Ordering;
 
     use device::{Device, QueuePriority};
     use std::collections::HashMap;
@@ -112,7 +113,7 @@ mod test {
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         assert!(PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap().len() > 0);
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 
     #[test]
@@ -127,7 +128,7 @@ mod test {
         let ref buf = PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap()[0];
         buf.reset(CommandBufferResetFlags::empty());
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 
     #[test]
@@ -142,6 +143,6 @@ mod test {
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         assert!(PrimaryCommandBufferGroup::allocate(&cmd_pool, 1).unwrap().len() > 0);
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 }

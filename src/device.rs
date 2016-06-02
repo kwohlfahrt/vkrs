@@ -103,6 +103,7 @@ pub struct Queue<'a> {
 mod tests {
     use instance::debug_instance;
     use debug::debug_monitor;
+    use std::sync::atomic::Ordering;
 
     use device::*;
     use std::collections::HashMap;
@@ -120,7 +121,7 @@ mod tests {
         };
         assert!(device.is_ok());
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 
     #[test]
@@ -134,7 +135,7 @@ mod tests {
         };
         assert!(device.get_queue(0, 0).is_some());
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 
     #[test]
@@ -149,6 +150,6 @@ mod tests {
         assert!(device.get_queue(0, 1).is_none());
         assert!(device.get_queue(1, 0).is_none());
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 }

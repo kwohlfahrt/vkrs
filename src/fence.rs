@@ -60,6 +60,7 @@ impl<'a> Drop for Fence<'a> {
 mod test {
     use instance::debug_instance;
     use debug::debug_monitor;
+    use std::sync::atomic::Ordering;
 
     use device::{Device, QueuePriority};
     use std::collections::HashMap;
@@ -79,7 +80,7 @@ mod test {
 
         assert!(!fence.signaled().unwrap());
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 
     #[test]
@@ -94,7 +95,7 @@ mod test {
 
         assert!(fence.signaled().unwrap());
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 
     #[test]
@@ -112,7 +113,7 @@ mod test {
         assert!(!fence.signaled().unwrap());
 
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 
     #[test]
@@ -130,6 +131,6 @@ mod test {
          assert!(!fence.wait(10_000_000).unwrap());}
 
         drop(dbg);
-        assert!(errs.recv().is_err());
+        assert!(!errs.load(Ordering::Relaxed));
     }
 }
