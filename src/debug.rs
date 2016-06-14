@@ -11,7 +11,7 @@ use std::io::{self, Write};
 use std::mem::transmute;
 
 pub type DebugReportFlagsEXT = VkDebugReportFlagsEXT;
-type PFNDebugReportCallbackEXT = FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32;
+type PFNDebugReportCallbackEXT = Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32;
 
 pub struct DebugReportCallbackEXT<'a, 'b> {
     handle: VkDebugReportCallbackEXT,
@@ -19,11 +19,11 @@ pub struct DebugReportCallbackEXT<'a, 'b> {
     destructor: PFNvkDestroyDebugReportCallbackEXT,
     message: PFNvkDebugReportMessageEXT,
     #[allow(dead_code)] // used in callback_handler
-    callback: Box<Box<FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync>>,
+    callback: Box<Box<Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync>>,
 }
 
 extern fn callback_handler(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, p_layer_prefix: *const c_char, p_message: *const c_char, p_user_data: *mut c_void) -> VkBool32 {
-    let closure: &mut Box<PFNDebugReportCallbackEXT> = unsafe {transmute(p_user_data)};
+    let closure: &Box<PFNDebugReportCallbackEXT> = unsafe {transmute(p_user_data)};
     let message = unsafe{CStr::from_ptr(p_message)};
     let layer_prefix = unsafe{CStr::from_ptr(p_layer_prefix)};
     closure(flags, object_type, object, location, message_code, layer_prefix, message)
@@ -31,10 +31,10 @@ extern fn callback_handler(flags: VkDebugReportFlagsEXT, object_type: VkDebugRep
 
 impl<'a, 'b> DebugReportCallbackEXT<'a, 'b> {
     pub fn new<F>(instance: &'a Instance, callback: F, flags: VkDebugReportFlagsEXT) -> Result<Self, VkResult>
-        where F: FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync
+        where F: Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync
     {
         // Type annotation here is necessary
-        let callback : Box<Box<FnMut(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync>>
+        let callback : Box<Box<Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync>>
             = Box::new(Box::new(callback));
         let create_info = VkDebugReportCallbackCreateInfoEXT{
             s_type: VkStructureType::VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
@@ -137,14 +137,16 @@ mod tests {
     #[test]
     fn closure_callback() {
         use sys::common::VkBool32;
-        let mut flag = false;
+        use std::sync::atomic::{AtomicBool, Ordering};
+
+        let flag = AtomicBool::new(false);
         {
             let instance = debug_instance();
-            let closure = |_, _, _, _, _, _: &_, _: &_| {flag = true; VkBool32::False};
+            let closure = |_, _, _, _, _, _: &_, _: &_| {flag.store(true, Ordering::Relaxed); VkBool32::False};
             DebugReportCallbackEXT::new(&instance, closure, DebugReportFlagsEXT::all()).unwrap();
         }
         // Adding a callback triggers with the DEBUG level enabled triggers the callback
-        assert!(flag)
+        assert!(flag.load(Ordering::Relaxed))
     }
 
     #[test]
@@ -152,15 +154,16 @@ mod tests {
         use sys::debug::{VK_DEBUG_REPORT_ERROR_BIT_EXT, VkDebugReportObjectTypeEXT};
         use sys::common::VkBool32;
         use std::ffi::CString;
+        use std::sync::atomic::{AtomicBool, Ordering};
 
-        let mut flag = false;
+        let flag = AtomicBool::new(false);
         {
             let instance = debug_instance();
-            let closure = |_, _, _, _, _, _: &_, _: &_| {flag = true; VkBool32::False};
+            let closure = |_, _, _, _, _, _: &_, _: &_| {flag.store(true, Ordering::Relaxed); VkBool32::False};
             let dbg = DebugReportCallbackEXT::new(&instance, closure, DebugReportFlagsEXT::all()).unwrap();
             dbg.message(VK_DEBUG_REPORT_ERROR_BIT_EXT, VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT, 0, 0, 0, &CString::new("").unwrap(), &CString::new("monitor").unwrap());
         }
-        assert!(flag)
+        assert!(flag.load(Ordering::Relaxed))
     }
 
     #[test]
