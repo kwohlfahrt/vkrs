@@ -4,6 +4,7 @@ use std::ffi::{CStr, CString};
 use sys::common::{VkStructureType, VkResult, VK_NULL_HANDLE, VkBool32};
 use sys::instance::{vkGetInstanceProcAddr, PFNvkVoidFunction};
 use sys::debug::*;
+use std::panic::{catch_unwind, AssertUnwindSafe, UnwindSafe};
 use instance::Instance;
 
 use std::ptr;
@@ -26,12 +27,14 @@ extern fn callback_handler(flags: VkDebugReportFlagsEXT, object_type: VkDebugRep
     let closure: &Box<PFNDebugReportCallbackEXT> = unsafe {transmute(p_user_data)};
     let message = unsafe{CStr::from_ptr(p_message)};
     let layer_prefix = unsafe{CStr::from_ptr(p_layer_prefix)};
-    closure(flags, object_type, object, location, message_code, layer_prefix, message)
+    catch_unwind(AssertUnwindSafe(|| {
+        closure(flags, object_type, object, location, message_code, layer_prefix, message)
+    })).unwrap_or(VkBool32::False)
 }
 
 impl<'a, 'b> DebugReportCallbackEXT<'a, 'b> {
     pub fn new<F>(instance: &'a Instance, callback: F, flags: VkDebugReportFlagsEXT) -> Result<Self, VkResult>
-        where F: Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync
+        where F: Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync + UnwindSafe
     {
         // Type annotation here is necessary
         let callback : Box<Box<Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync>>
@@ -100,9 +103,9 @@ pub fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportOb
 
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
-pub fn debug_monitor<'a>(instance: &'a Instance) -> (Arc<AtomicBool>, DebugReportCallbackEXT<'a, 'a>) {
+pub fn debug_monitor<'a>(instance: &'a Instance) -> (Arc<AssertUnwindSafe<AtomicBool>>, DebugReportCallbackEXT<'a, 'a>) {
     use std::sync::atomic::Ordering;
-    let flag = Arc::new(AtomicBool::new(false));
+    let flag = Arc::new(AssertUnwindSafe(AtomicBool::new(false)));
     let closure = {
         let flag = flag.clone();
         move |_,_,_,_,_,_:&_,_:&_| {
@@ -138,8 +141,9 @@ mod tests {
     fn closure_callback() {
         use sys::common::VkBool32;
         use std::sync::atomic::{AtomicBool, Ordering};
+        use std::panic::AssertUnwindSafe;
 
-        let flag = AtomicBool::new(false);
+        let flag = AssertUnwindSafe(AtomicBool::new(false));
         {
             let instance = debug_instance();
             let closure = |_, _, _, _, _, _: &_, _: &_| {flag.store(true, Ordering::Relaxed); VkBool32::False};
@@ -155,8 +159,9 @@ mod tests {
         use sys::common::VkBool32;
         use std::ffi::CString;
         use std::sync::atomic::{AtomicBool, Ordering};
+        use std::panic::AssertUnwindSafe;
 
-        let flag = AtomicBool::new(false);
+        let flag = AssertUnwindSafe(AtomicBool::new(false));
         {
             let instance = debug_instance();
             let closure = |_, _, _, _, _, _: &_, _: &_| {flag.store(true, Ordering::Relaxed); VkBool32::False};
