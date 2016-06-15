@@ -23,6 +23,7 @@ pub struct DebugReportCallbackEXT<'a, 'b> {
     callback: Box<Box<Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync>>,
 }
 
+#[allow(too_many_arguments)]
 extern fn callback_handler(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, p_layer_prefix: *const c_char, p_message: *const c_char, p_user_data: *mut c_void) -> VkBool32 {
     let closure: &Box<PFNDebugReportCallbackEXT> = unsafe {transmute(p_user_data)};
     let message = unsafe{CStr::from_ptr(p_message)};
@@ -103,7 +104,7 @@ pub fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportOb
 
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
-pub fn debug_monitor<'a>(instance: &'a Instance) -> (Arc<AssertUnwindSafe<AtomicBool>>, DebugReportCallbackEXT<'a, 'a>) {
+pub fn debug_monitor(instance: &Instance) -> (Arc<AssertUnwindSafe<AtomicBool>>, DebugReportCallbackEXT) {
     use std::sync::atomic::Ordering;
     let flag = Arc::new(AssertUnwindSafe(AtomicBool::new(false)));
     let closure = {

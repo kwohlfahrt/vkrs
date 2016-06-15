@@ -36,7 +36,7 @@ impl Instance {
         }
     }
 
-    pub fn devices<'a>(&'a self) -> Result<Vec<PhysicalDevice<'a>>, VkResult> {
+    pub fn devices(&self) -> Result<Vec<PhysicalDevice>, VkResult> {
         let mut ndevices = 0;
         unsafe {
             match vkEnumeratePhysicalDevices(self.handle,

@@ -75,11 +75,12 @@ impl <'a> PrimaryCommandBufferGroup<'a> {
                     buffers.set_len(n as usize);
                     Ok(PrimaryCommandBufferGroup{handles: buffers, pool: pool})
                 },
-                x => return Err(x)
+                x => Err(x)
             }
         }
     }
     pub fn len(&self) -> u32 {self.handles.len() as u32}
+    pub fn is_empty(&self) -> bool {self.handles.is_empty()}
 }
 
 impl<'a> Drop for PrimaryCommandBufferGroup<'a> {

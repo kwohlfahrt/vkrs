@@ -10,7 +10,7 @@ pub struct QueuePriority(f32);
 impl QueuePriority {
     pub fn from_float(priority: f32) -> Option<QueuePriority> {
         if (0.0 <= priority) && (priority <= 1.0) {
-            return Some(QueuePriority(priority))
+            Some(QueuePriority(priority))
         } else {
             None
         }
@@ -73,13 +73,12 @@ impl<'a> Device<'a> {
 
     pub fn get_queue(&self, family: u32, index: u32) -> Option<Queue<'a>> {
         match self.nqueues.get(&family) {
-            None => None,
             Some(nqueues) if index < *nqueues => {
                 let mut queue = VK_NULL_HANDLE;
                 unsafe {vkGetDeviceQueue(self.handle, family, index, &mut queue);}
                 Some(Queue{queue: queue, device: PhantomData})
             }
-            Some(_) => None
+            Some(_) | None => None
         }
     }
 

@@ -6,3 +6,4 @@ authors = ["Kai Wohlfahrt <kai.scorpio@gmail.com>"]
 [dependencies]
 libc = "0.2"
 bitflags = "0.7"
+clippy = "~0.0.76"

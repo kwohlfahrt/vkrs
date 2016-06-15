@@ -13,9 +13,10 @@ impl<'a> Fence<'a> {
         let create_info = VkFenceCreateInfo {
             s_type: VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
             p_next: ptr::null(),
-            flags: match signaled {
-                true => VK_FENCE_CREATE_SIGNALED_BIT,
-                false => VkFenceCreateFlags::empty(),
+            flags: if signaled {
+                VK_FENCE_CREATE_SIGNALED_BIT
+            } else {
+                VkFenceCreateFlags::empty()
             }
         };
 

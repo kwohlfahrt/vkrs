@@ -1,3 +1,5 @@
+#![feature(plugin)]
+#![plugin(clippy)]
 #[macro_use]
 // TODO: Track bitflags#20 for namespaced flags
 extern crate bitflags;
