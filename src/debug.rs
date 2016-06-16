@@ -12,7 +12,6 @@ use std::io::{self, Write};
 use std::mem::transmute;
 
 pub type DebugReportFlagsEXT = VkDebugReportFlagsEXT;
-type PFNDebugReportCallbackEXT = Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32;
 
 pub struct DebugReportCallbackEXT<'a, 'b> {
     handle: VkDebugReportCallbackEXT,
@@ -25,7 +24,7 @@ pub struct DebugReportCallbackEXT<'a, 'b> {
 
 #[allow(too_many_arguments)]
 extern fn callback_handler(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, p_layer_prefix: *const c_char, p_message: *const c_char, p_user_data: *mut c_void) -> VkBool32 {
-    let closure: &Box<PFNDebugReportCallbackEXT> = unsafe {transmute(p_user_data)};
+    let closure: &Box<Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + Sync> = unsafe {transmute(p_user_data)};
     let message = unsafe{CStr::from_ptr(p_message)};
     let layer_prefix = unsafe{CStr::from_ptr(p_layer_prefix)};
     catch_unwind(AssertUnwindSafe(|| {
