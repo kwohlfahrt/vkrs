@@ -34,7 +34,7 @@ impl<'a> PrimaryCommandBuffer<'a> {
         }).collect())
     }
 
-    pub fn reset(&self, flags: CommandBufferResetFlags) -> VkResult{
+    pub fn reset(&mut self, flags: CommandBufferResetFlags) -> VkResult {
         unsafe {
             vkResetCommandBuffer(self.handle, flags)
         }
@@ -126,7 +126,7 @@ mod test {
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
-        let ref buf = PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap()[0];
+        let buf = &mut PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap()[0];
         buf.reset(CommandBufferResetFlags::empty());
         drop(dbg);
         assert!(!errs.load(Ordering::Relaxed));
