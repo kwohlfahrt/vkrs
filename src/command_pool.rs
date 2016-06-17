@@ -21,21 +21,17 @@ impl<'a> CommandPool<'a> {
         };
 
         let mut command_pool = VK_NULL_HANDLE;
-        unsafe {
-            match vkCreateCommandPool(*device.handle(), &create_info,
-                                      ptr::null(), &mut command_pool) {
-                VkResult::VK_SUCCESS => Ok(CommandPool{handle: command_pool,
-                                                       device: device}),
-                x => Err(x)
-            }
+        match unsafe {vkCreateCommandPool(*device.handle(), &create_info,
+                                          ptr::null(), &mut command_pool)} {
+            VkResult::VK_SUCCESS => Ok(CommandPool{handle: command_pool,
+                                                   device: device}),
+            x => Err(x)
         }
     }
 
     // TODO: Ensure command buffers are invalidated when reset occurs
     pub fn reset(&mut self, flags: CommandPoolResetFlags) {
-        unsafe {
-            vkResetCommandPool(*self.device.handle(), self.handle, flags)
-        }
+        unsafe {vkResetCommandPool(*self.device.handle(), self.handle, flags)}
     }
 
     pub fn handle(&self) -> &VkCommandPool {&self.handle}
@@ -44,9 +40,7 @@ impl<'a> CommandPool<'a> {
 
 impl <'a> Drop for CommandPool<'a> {
     fn drop(&mut self) {
-        unsafe {
-            vkDestroyCommandPool(*self.device.handle(), self.handle, ptr::null());
-        }
+        unsafe {vkDestroyCommandPool(*self.device.handle(), self.handle, ptr::null())}
     }
 }
 

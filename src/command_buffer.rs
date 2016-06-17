@@ -22,22 +22,20 @@ impl<'a> PrimaryCommandBuffer<'a> {
 
         let device = pool.device().handle();
         let mut buffers = Vec::<VkCommandBuffer>::with_capacity(n as usize);
-        unsafe {
-            match vkAllocateCommandBuffers(*device, &allocate_info, buffers.as_mut_ptr()){
-                VkResult::VK_SUCCESS => {buffers.set_len(n as usize)},
-                x => return Err(x)
-            }
+        match unsafe {vkAllocateCommandBuffers(*device, &allocate_info,
+                                               buffers.as_mut_ptr())} {
+            VkResult::VK_SUCCESS => {
+                unsafe {buffers.set_len(n as usize)};
+                Ok(buffers.into_iter().map(|buf| {
+                    PrimaryCommandBuffer{handle: buf, pool: pool}
+                }).collect())
+            },
+            x => Err(x)
         }
-
-        Ok(buffers.into_iter().map(|buf| {
-            PrimaryCommandBuffer{handle: buf, pool: pool}
-        }).collect())
     }
 
     pub fn reset(&mut self, flags: CommandBufferResetFlags) -> VkResult {
-        unsafe {
-            vkResetCommandBuffer(self.handle, flags)
-        }
+        unsafe {vkResetCommandBuffer(self.handle, flags)}
     }
 
     pub fn handle(&self) -> &VkCommandBuffer {&self.handle}
@@ -69,14 +67,13 @@ impl <'a> PrimaryCommandBufferGroup<'a> {
 
         let device = pool.device().handle();
         let mut buffers = Vec::<VkCommandBuffer>::with_capacity(n as usize);
-        unsafe {
-            match vkAllocateCommandBuffers(*device, &allocate_info, buffers.as_mut_ptr()){
-                VkResult::VK_SUCCESS => {
-                    buffers.set_len(n as usize);
-                    Ok(PrimaryCommandBufferGroup{handles: buffers, pool: pool})
-                },
-                x => Err(x)
-            }
+        match unsafe {vkAllocateCommandBuffers(*device, &allocate_info,
+                                               buffers.as_mut_ptr())} {
+            VkResult::VK_SUCCESS => {
+                unsafe{buffers.set_len(n as usize)};
+                Ok(PrimaryCommandBufferGroup{handles: buffers, pool: pool})
+            },
+            x => Err(x)
         }
     }
     pub fn len(&self) -> u32 {self.handles.len() as u32}

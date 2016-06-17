@@ -28,36 +28,31 @@ impl Instance {
         };
 
         let mut instance = VK_NULL_HANDLE;
-        unsafe {
-            match vkCreateInstance(&create_info, ptr::null(), &mut instance) {
-                VkResult::VK_SUCCESS => Ok(Instance{handle: instance}),
-                x => Err(x),
-            }
+        match unsafe {vkCreateInstance(&create_info, ptr::null(), &mut instance)} {
+            VkResult::VK_SUCCESS => Ok(Instance{handle: instance}),
+            x => Err(x),
         }
     }
 
     pub fn devices(&self) -> Result<Vec<PhysicalDevice>, VkResult> {
         let mut ndevices = 0;
-        unsafe {
-            match vkEnumeratePhysicalDevices(self.handle,
-                                             &mut ndevices,
-                                             ptr::null_mut()) {
-                VkResult::VK_SUCCESS => {}
-                x => return Err(x)
-            };
-        }
+        match unsafe {vkEnumeratePhysicalDevices(self.handle, &mut ndevices,
+                                                 ptr::null_mut())} {
+            VkResult::VK_SUCCESS => {}
+            x => return Err(x)
+        };
         let mut devices = Vec::<VkPhysicalDevice>::with_capacity(ndevices as usize);
-        unsafe {
-            match vkEnumeratePhysicalDevices(self.handle,
-                                             &mut (devices.capacity() as u32),
-                                             devices.as_mut_ptr()) {
-                VkResult::VK_SUCCESS => {devices.set_len(ndevices as usize);}
-                x => return Err(x)
-            };
+        match unsafe {vkEnumeratePhysicalDevices(self.handle,
+                                                 &mut (devices.capacity() as u32),
+                                                 devices.as_mut_ptr())} {
+            VkResult::VK_SUCCESS => {
+                unsafe{devices.set_len(ndevices as usize)};
+                Ok(devices.into_iter().map(|dev| {
+                    PhysicalDevice{handle: dev, instance: PhantomData}
+                }).collect())
+            }
+            x => Err(x)
         }
-        Ok(devices.into_iter().map(|dev| {
-            PhysicalDevice{handle: dev, instance: PhantomData}
-        }).collect())
     }
 
     pub fn handle(&self) -> &VkInstance {&self.handle}
@@ -65,9 +60,7 @@ impl Instance {
 
 impl Drop for Instance {
     fn drop(&mut self) {
-        unsafe {
-            vkDestroyInstance(self.handle, ptr::null())
-        }
+        unsafe {vkDestroyInstance(self.handle, ptr::null())}
     }
 }
 
