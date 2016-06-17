@@ -49,45 +49,6 @@ impl<'a> Drop for PrimaryCommandBuffer<'a> {
     }
 }
 
-pub struct PrimaryCommandBufferGroup<'a> {
-    handles: Vec<VkCommandBuffer>,
-    pool: &'a CommandPool<'a>,
-}
-
-
-impl <'a> PrimaryCommandBufferGroup<'a> {
-    pub fn allocate(pool: &'a CommandPool<'a>, n: u32) -> Result<Self, VkResult> {
-        let allocate_info = VkCommandBufferAllocateInfo{
-            s_type: VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            p_next: ptr::null(),
-            command_pool: *pool.handle(),
-            level: VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-            command_buffer_count: n,
-        };
-
-        let device = pool.device().handle();
-        let mut buffers = Vec::<VkCommandBuffer>::with_capacity(n as usize);
-        match unsafe {vkAllocateCommandBuffers(*device, &allocate_info,
-                                               buffers.as_mut_ptr())} {
-            VkResult::VK_SUCCESS => {
-                unsafe{buffers.set_len(n as usize)};
-                Ok(PrimaryCommandBufferGroup{handles: buffers, pool: pool})
-            },
-            x => Err(x)
-        }
-    }
-    pub fn len(&self) -> u32 {self.handles.len() as u32}
-    pub fn is_empty(&self) -> bool {self.handles.is_empty()}
-}
-
-impl<'a> Drop for PrimaryCommandBufferGroup<'a> {
-    fn drop(&mut self) {
-        unsafe {
-            vkFreeCommandBuffers(*self.pool.device().handle(), *self.pool.handle(), self.handles.len() as u32, self.handles.as_ptr())
-        }
-    }
-}
-
 #[cfg(test)]
 mod test {
     use instance::debug_instance;
@@ -125,21 +86,6 @@ mod test {
         let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
         let buf = &mut PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap()[0];
         buf.reset(CommandBufferResetFlags::empty());
-        drop(dbg);
-        assert!(!errs.load(Ordering::Relaxed));
-    }
-
-    #[test]
-    fn allocate_command_buffer_group() {
-        let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
-
-        let device = {
-            let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
-            Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
-        };
-        let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
-        assert!(PrimaryCommandBufferGroup::allocate(&cmd_pool, 1).unwrap().len() > 0);
         drop(dbg);
         assert!(!errs.load(Ordering::Relaxed));
     }
