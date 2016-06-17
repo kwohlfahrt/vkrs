@@ -1,6 +1,6 @@
-#![cfg_attr(feature="lint", feature(plugin))]
-#![cfg_attr(feature="lint", plugin(clippy))]
-#![cfg_attr(not(feature="lint"), allow(unknown_lints))]
+#![cfg_attr(test, feature(plugin))]
+#![cfg_attr(test, plugin(clippy))]
+#![cfg_attr(not(test), allow(unknown_lints))]
 #[macro_use]
 // TODO: Track bitflags#20 for namespaced flags
 extern crate bitflags;

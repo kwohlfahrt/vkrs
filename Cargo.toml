@@ -3,13 +3,10 @@ name = "vkrs"
 version = "0.1.0"
 authors = ["Kai Wohlfahrt <kai.scorpio@gmail.com>"]
 
-[features]
-lint = ["clippy"]
-
 [dependencies]
 libc = "0.2"
 bitflags = "0.7"
-clippy = {version="~0.0.76", optional=true}
 
 [dev-dependencies]
 compiletest_rs = "0.2"
+clippy = "~0.0.76"
