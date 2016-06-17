@@ -1,3 +1,5 @@
+// Not auto-generated, pending KhronosGroup/VulkanDocs#210
+
 pub mod common;
 pub mod instance;
 pub mod device;
