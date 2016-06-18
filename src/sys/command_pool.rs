@@ -32,5 +32,5 @@ pub struct VkCommandPoolCreateInfo {
 extern {
     pub fn vkCreateCommandPool(device: VkDevice, create_info: *const VkCommandPoolCreateInfo, p_allocator: *const VkAllocationCallbacks, p_command_pool: *mut VkCommandPool) -> VkResult;
     pub fn vkDestroyCommandPool(device: VkDevice, command_pool: VkCommandPool, p_allocator: *const VkAllocationCallbacks);
-    pub fn vkResetCommandPool(device: VkDevice, command_pool: VkCommandPool, flags: VkCommandPoolResetFlags);
+    pub fn vkResetCommandPool(device: VkDevice, command_pool: VkCommandPool, flags: VkCommandPoolResetFlags) -> VkResult;
 }

@@ -30,8 +30,11 @@ impl<'a> CommandPool<'a> {
     }
 
     // TODO: Ensure command buffers are invalidated when reset occurs
-    pub fn reset(&mut self, flags: CommandPoolResetFlags) {
-        unsafe {vkResetCommandPool(*self.device.handle(), self.handle, flags)}
+    pub fn reset(&mut self, flags: CommandPoolResetFlags) -> Result<(), VkResult> {
+        match unsafe {vkResetCommandPool(*self.device.handle(), self.handle, flags)} {
+            VkResult::VK_SUCCESS => Ok(()),
+            x => Err(x),
+        }
     }
 
     pub fn handle(&self) -> &VkCommandPool {&self.handle}
@@ -78,7 +81,7 @@ mod test {
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
         let mut cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
-        cmd_pool.reset(CommandPoolResetFlags::empty());
+        cmd_pool.reset(CommandPoolResetFlags::empty()).unwrap();
         drop(dbg);
         assert!(!errs.load(Ordering::Relaxed));
     }
