@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 fn command_buffer() {
     use vkrs::command_pool::{SplitCommandPool, CommandPool};
-    use vkrs::command_buffer::PrimaryCommandBuffer;
+    use vkrs::command_buffer::{PrimaryCommandBuffer, CommandBuffer};
 
     let instance = Instance::new(None, None).unwrap();
     let device = {
@@ -24,7 +24,7 @@ fn command_buffer() {
 fn command_pool_reset() {
     use vkrs::command_pool::{SplitCommandPool, CommandPool};
     use vkrs::sys::command_pool::VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT;
-    use vkrs::command_buffer::PrimaryCommandBuffer;
+    use vkrs::command_buffer::{PrimaryCommandBuffer, CommandBuffer};
 
     let instance = Instance::new(None, None).unwrap();
     let device = {

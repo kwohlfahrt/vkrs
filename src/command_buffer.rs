@@ -5,13 +5,11 @@ use std::ptr;
 
 pub type CommandBufferResetFlags = VkCommandBufferResetFlags;
 
-pub struct PrimaryCommandBuffer<'a, P: CommandPool<'a> + 'a> {
-    handle: VkCommandBuffer,
-    pool: &'a P,
-}
+pub trait CommandBuffer<'a, P: CommandPool<'a> + 'a> : Sized {
+    unsafe fn _new(handle: VkCommandBuffer, pool: &'a P) -> Self;
+    fn handle(&self) -> &VkCommandBuffer;
 
-impl<'a, P: CommandPool<'a>> PrimaryCommandBuffer<'a, P> {
-    pub fn allocate(pool: &'a P, n: u32) -> Result<Vec<Self>, VkResult> {
+    fn allocate(pool: &'a P, n: u32) -> Result<Vec<Self>, VkResult> {
         let allocate_info = VkCommandBufferAllocateInfo{
             s_type: VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
             p_next: ptr::null(),
@@ -27,7 +25,7 @@ impl<'a, P: CommandPool<'a>> PrimaryCommandBuffer<'a, P> {
             VkResult::VK_SUCCESS => {
                 unsafe {buffers.set_len(n as usize)};
                 Ok(buffers.into_iter().map(|buf| {
-                    PrimaryCommandBuffer{handle: buf, pool: pool}
+                    unsafe{Self::_new(buf, pool)}
                 }).collect())
             },
             x => Err(x)
@@ -40,8 +38,18 @@ impl<'a, P: CommandPool<'a>> PrimaryCommandBuffer<'a, P> {
             x => Err(x)
         }
     }
+}
 
-    pub fn handle(&self) -> &VkCommandBuffer {&self.handle}
+pub struct PrimaryCommandBuffer<'a, P: CommandPool<'a> + 'a> {
+    handle: VkCommandBuffer,
+    pool: &'a P,
+}
+
+impl<'a, P: CommandPool<'a>> CommandBuffer<'a, P> for PrimaryCommandBuffer<'a, P> {
+    unsafe fn _new(handle: VkCommandBuffer, pool: &'a P) -> Self {
+        PrimaryCommandBuffer{handle: handle, pool: pool}
+    }
+    fn handle(&self) -> &VkCommandBuffer {&self.handle}
 }
 
 impl<'a, P: CommandPool<'a>> Drop for PrimaryCommandBuffer<'a, P> {
