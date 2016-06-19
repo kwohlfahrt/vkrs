@@ -39,7 +39,8 @@ impl<'a> CommandPool<'a> {
         }
     }
 
-    // TODO: Ensure command buffers are invalidated when reset occurs
+    // Command buffers must be dropped (free'd) before resetting.
+    // Would be useful to add an implicit drop somehow.
     pub fn reset(&mut self, flags: CommandPoolResetFlags) -> Result<(), VkResult> {
         match unsafe {vkResetCommandPool(*self.device.handle(), self.handle, flags)} {
             VkResult::VK_SUCCESS => Ok(()),
