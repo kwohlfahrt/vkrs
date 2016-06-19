@@ -1,5 +1,5 @@
 use sys::common::{VkResult, VkStructureType};
-use command_pool::CommandPool;
+use command_pool::{SplitCommandPool, CommandPool};
 use sys::command_buffer::*;
 use std::ptr;
 
@@ -31,7 +31,9 @@ pub trait CommandBuffer<'a, P: CommandPool<'a> + 'a> : Sized {
             x => Err(x)
         }
     }
+}
 
+pub trait ResetableCommandBuffer<'a> : CommandBuffer<'a, SplitCommandPool<'a>> {
     fn reset(&mut self, flags: CommandBufferResetFlags) -> Result<(), VkResult> {
         match unsafe {vkResetCommandBuffer(*self.handle(), flags)} {
             VkResult::VK_SUCCESS => Ok(()),
@@ -39,6 +41,8 @@ pub trait CommandBuffer<'a, P: CommandPool<'a> + 'a> : Sized {
         }
     }
 }
+
+impl<'a, B: CommandBuffer<'a, SplitCommandPool<'a>>> ResetableCommandBuffer<'a> for B {}
 
 pub struct PrimaryCommandBuffer<'a, P: CommandPool<'a> + 'a> {
     handle: VkCommandBuffer,
