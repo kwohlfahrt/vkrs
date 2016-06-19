@@ -1,3 +1,5 @@
+#![feature(associated_consts)]
+
 #![cfg_attr(test, feature(plugin))]
 #![cfg_attr(test, plugin(clippy))]
 #![cfg_attr(not(test), allow(unknown_lints))]

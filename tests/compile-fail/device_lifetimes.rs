@@ -15,7 +15,7 @@ fn command_pool() {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<u32, Vec<QueuePriority>>>();
             Device::new(&physical_devices[0], priorities).unwrap()
         };
-        CommandPool::new(&device, 0, CommandPoolCreateFlags::empty())
+        CommandPool::new(&device, 0, false)
         //~^ Error `device` does not live long enough
     };
 }

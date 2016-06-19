@@ -12,11 +12,21 @@ pub struct CommandPool<'a> {
 }
 
 impl<'a> CommandPool<'a> {
-    pub fn new(device: &'a Device, queue_family_index: u32, flags: VkCommandPoolCreateFlags) -> Result<Self, VkResult>{
+    const BUFFER_RESET: bool = true;
+
+    pub fn new(device: &'a Device, queue_family_index: u32, transient: bool) -> Result<Self, VkResult>{
         let create_info = VkCommandPoolCreateInfo {
             s_type: VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
             p_next: ptr::null(),
-            flags: flags,
+            flags: if Self::BUFFER_RESET {
+                VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+            } else {
+                CommandPoolCreateFlags::empty()
+            } | if transient {
+                VK_COMMAND_POOL_CREATE_TRANSIENT_BIT
+            } else {
+                CommandPoolCreateFlags::empty()
+            },
             queue_family_index: queue_family_index,
         };
 
@@ -66,7 +76,7 @@ mod test {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
-        assert!(CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).is_ok());
+        assert!(CommandPool::new(&device, 0, false).is_ok());
         drop(dbg);
         assert!(!errs.load(Ordering::Relaxed));
     }
@@ -80,7 +90,7 @@ mod test {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
-        let mut cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
+        let mut cmd_pool = CommandPool::new(&device, 0, false).unwrap();
         cmd_pool.reset(CommandPoolResetFlags::empty()).unwrap();
         drop(dbg);
         assert!(!errs.load(Ordering::Relaxed));

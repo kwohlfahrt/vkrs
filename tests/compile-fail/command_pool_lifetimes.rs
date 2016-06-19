@@ -15,7 +15,7 @@ fn command_buffer() {
         Device::new(&physical_devices[0], priorities).unwrap()
     };
     let cmd_bufs = {
-        let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
+        let cmd_pool = CommandPool::new(&device, 0, false).unwrap();
         PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap()
         //~^ Error `cmd_pool` does not live long enough
     };

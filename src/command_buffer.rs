@@ -60,8 +60,7 @@ mod test {
 
     use device::{Device, QueuePriority};
     use std::collections::HashMap;
-    use command_pool::{CommandPool, CommandPoolCreateFlags};
-    use sys::command_pool::VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    use command_pool::CommandPool;
     use command_buffer::*;
 
     #[test]
@@ -73,7 +72,7 @@ mod test {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
-        let cmd_pool = CommandPool::new(&device, 0, CommandPoolCreateFlags::empty()).unwrap();
+        let cmd_pool = CommandPool::new(&device, 0, false).unwrap();
         assert!(PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap().len() > 0);
         drop(dbg);
         assert!(!errs.load(Ordering::Relaxed));
@@ -87,7 +86,7 @@ mod test {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
         };
-        let cmd_pool = CommandPool::new(&device, 0, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT).unwrap();
+        let cmd_pool = CommandPool::new(&device, 0, false).unwrap();
         let primary_buf = &mut PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap()[0];
         primary_buf.reset(CommandBufferResetFlags::empty()).unwrap();
         drop(dbg);
