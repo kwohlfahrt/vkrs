@@ -5,7 +5,8 @@ use std::ptr;
 
 pub type CommandBufferResetFlags = VkCommandBufferResetFlags;
 
-pub trait CommandBuffer<'a, P: CommandPool<'a> + 'a> : Sized {
+pub trait CommandBuffer<'a, P> : Sized
+    where P: CommandPool<'a> + 'a {
     const LEVEL: VkCommandBufferLevel;
 
     unsafe fn _new(handle: VkCommandBuffer, pool: &'a P) -> Self;
@@ -44,14 +45,19 @@ pub trait ResetableCommandBuffer<'a> : CommandBuffer<'a, SplitCommandPool<'a>> {
     }
 }
 
-impl<'a, B: CommandBuffer<'a, SplitCommandPool<'a>>> ResetableCommandBuffer<'a> for B {}
+impl<'a, B> ResetableCommandBuffer<'a> for B
+    where B : CommandBuffer<'a, SplitCommandPool<'a>> {}
 
-pub struct PrimaryCommandBuffer<'a, P: CommandPool<'a> + 'a> {
+pub struct PrimaryCommandBuffer<'a, P>
+    where P : CommandPool<'a> + 'a
+{
     handle: VkCommandBuffer,
     pool: &'a P,
 }
 
-impl<'a, P: CommandPool<'a>> CommandBuffer<'a, P> for PrimaryCommandBuffer<'a, P> {
+impl<'a, P> CommandBuffer<'a, P> for PrimaryCommandBuffer<'a, P>
+    where P: CommandPool<'a>
+{
     const LEVEL: VkCommandBufferLevel = VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
     unsafe fn _new(handle: VkCommandBuffer, pool: &'a P) -> Self {
