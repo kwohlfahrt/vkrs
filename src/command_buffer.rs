@@ -9,9 +9,13 @@ pub trait CommandBuffer<'a, P> : Sized
     where P: CommandPool<'a> + 'a {
     const LEVEL: VkCommandBufferLevel;
 
-    unsafe fn _new(handle: VkCommandBuffer, pool: &'a P) -> Self;
+    unsafe fn new(handle: VkCommandBuffer, pool: &'a P) -> Self;
     fn handle(&self) -> &VkCommandBuffer;
+    fn pool(&self) -> &P;
+}
 
+pub trait InitialCommandBuffer<'a, P> : CommandBuffer<'a, P>
+    where P : CommandPool<'a> + 'a {
     fn allocate(pool: &'a P, n: u32) -> Result<Vec<Self>, VkResult> {
         let allocate_info = VkCommandBufferAllocateInfo{
             s_type: VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -28,12 +32,24 @@ pub trait CommandBuffer<'a, P> : Sized
             VkResult::VK_SUCCESS => {
                 unsafe {buffers.set_len(n as usize)};
                 Ok(buffers.into_iter().map(|buf| {
-                    unsafe{Self::_new(buf, pool)}
+                    unsafe{Self::new(buf, pool)}
                 }).collect())
             },
             x => Err(x)
         }
     }
+}
+
+pub trait RecordingCommandBuffer<'a, P> : CommandBuffer<'a, P>
+    where P : CommandPool<'a> + 'a {
+}
+
+pub trait ExecutableCommandBuffer<'a, P> : CommandBuffer<'a, P>
+    where P : CommandPool<'a> + 'a {
+}
+
+pub trait PendingCommandBuffer<'a, P> : CommandBuffer<'a, P>
+    where P : CommandPool<'a> + 'a {
 }
 
 pub trait ResetableCommandBuffer<'a> : CommandBuffer<'a, SplitCommandPool<'a>> {
@@ -56,14 +72,15 @@ pub struct PrimaryCommandBuffer<'a, P>
 }
 
 impl<'a, P> CommandBuffer<'a, P> for PrimaryCommandBuffer<'a, P>
-    where P: CommandPool<'a>
+    where P: CommandPool<'a> + 'a
 {
     const LEVEL: VkCommandBufferLevel = VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
-    unsafe fn _new(handle: VkCommandBuffer, pool: &'a P) -> Self {
+    unsafe fn new(handle: VkCommandBuffer, pool: &'a P) -> Self {
         PrimaryCommandBuffer{handle: handle, pool: pool}
     }
     fn handle(&self) -> &VkCommandBuffer {&self.handle}
+    fn pool(&self) -> &P {&self.pool}
 }
 
 impl<'a, P: CommandPool<'a>> Drop for PrimaryCommandBuffer<'a, P> {
