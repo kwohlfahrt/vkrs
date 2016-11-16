@@ -11,13 +11,13 @@ fn command_pool() {
         let instance = Instance::new(None, None).unwrap();
         let device = {
             let physical_devices = instance.devices().unwrap();
-            //~^ Error `instance` does not live long enough
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<u32, Vec<QueuePriority>>>();
             Device::new(&physical_devices[0], priorities).unwrap()
         };
         SplitCommandPool::new(&device, 0, false)
-        //~^ Error `device` does not live long enough
     };
+    //~^ Error `instance` does not live long enough
+    //~^^ Error `device` does not live long enough
 }
 
 fn fence() {
@@ -27,13 +27,13 @@ fn fence() {
         let instance = Instance::new(None, None).unwrap();
         let device = {
             let physical_devices = instance.devices().unwrap();
-            //~^ Error `instance` does not live long enough
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<u32, Vec<QueuePriority>>>();
             Device::new(&physical_devices[0], priorities).unwrap()
         };
         Fence::new(&device, false)
-        //~^ Error `device` does not live long enough
     };
+    //~^ Error `instance` does not live long enough
+    //~^^ Error `device` does not live long enough
 }
 
 fn event() {
@@ -43,13 +43,13 @@ fn event() {
         let instance = Instance::new(None, None).unwrap();
         let device = {
             let physical_devices = instance.devices().unwrap();
-            //~^ Error `instance` does not live long enough
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<u32, Vec<QueuePriority>>>();
             Device::new(&physical_devices[0], priorities).unwrap()
         };
         Event::new(&device)
-        //~^ Error `device` does not live long enough
     };
+    //~^ Error `instance` does not live long enough
+    //~^^ Error `device` does not live long enough
 }
 
 fn Semaphore() {
@@ -59,13 +59,13 @@ fn Semaphore() {
         let instance = Instance::new(None, None).unwrap();
         let device = {
             let physical_devices = instance.devices().unwrap();
-            //~^ Error `instance` does not live long enough
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<u32, Vec<QueuePriority>>>();
             Device::new(&physical_devices[0], priorities).unwrap()
         };
         Semaphore::new(&device)
-        //~^ Error `device` does not live long enough
     };
+    //~^ Error `instance` does not live long enough
+    //~^^ Error `device` does not live long enough
 }
 
 fn main() {}

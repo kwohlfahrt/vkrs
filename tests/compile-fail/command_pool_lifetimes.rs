@@ -17,8 +17,8 @@ fn command_buffer() {
     let cmd_bufs = {
         let cmd_pool = SplitCommandPool::new(&device, 0, false).unwrap();
         PrimaryCommandBuffer::allocate(&cmd_pool, 1).unwrap()
-        //~^ Error `cmd_pool` does not live long enough
     };
+    //~^ Error `cmd_pool` does not live long enough
 }
 
 fn command_pool_reset() {
