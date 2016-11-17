@@ -69,10 +69,10 @@ mod test {
     use fence::*;
 
     #[test]
-    #[ignore] // vkGetFenceStatus is currently broken (Mesa #95259)
     fn create_fence_unsignaled() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance, true);
+        // Testing un-submitted fence is a warning, so ignore them
+        let (errs, dbg) = debug_monitor(&instance, false);
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
@@ -85,7 +85,6 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn create_fence_signaled() {
         let instance = debug_instance();
         let (errs, dbg) = debug_monitor(&instance, true);
@@ -101,10 +100,9 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn reset_fence() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance, true);
+        let (errs, dbg) = debug_monitor(&instance, false);
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
@@ -119,10 +117,9 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn wait_fence() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance, true);
+        let (errs, dbg) = debug_monitor(&instance, false);
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
