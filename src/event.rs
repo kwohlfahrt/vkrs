@@ -11,7 +11,7 @@ pub struct Event<'a> {
 impl<'a> Event<'a> {
     pub fn new(device: &'a Device) -> Result<Self, VkResult> {
         let create_info = VkEventCreateInfo {
-            s_type: VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+            s_type: VkStructureType::VK_STRUCTURE_TYPE_EVENT_CREATE_INFO,
             p_next: ptr::null(),
             flags: VkEventCreateFlags::Reserved,
         };
