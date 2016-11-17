@@ -139,3 +139,9 @@ impl Default for VkBool32 {
         VkBool32::False
     }
 }
+
+pub struct VkExtent3D {
+    pub width: uint32_t,
+    pub height: uint32_t,
+    pub depth: uint32_t,
+}

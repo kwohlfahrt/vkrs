@@ -1,5 +1,6 @@
 use sys::common::{VkResult, VkStructureType, VK_NULL_HANDLE};
 use sys::device::*;
+use sys::instance::VK_QUEUE_GRAPHICS_BIT;
 use instance::PhysicalDevice;
 use std::marker::PhantomData;
 use std::collections::HashMap;
@@ -54,6 +55,15 @@ impl<'a> Device<'a> {
             pp_enabled_extension_names: ptr::null(),
             p_enabled_features: &VkPhysicalDeviceFeatures::default(),
         };
+
+        let queue_family_properties = physical_device.queue_family_properties();
+        if queue_priorities.iter().any(|(family, priorities)| {
+            let count = queue_family_properties[*family as usize].queue_count as usize;
+            let flags = queue_family_properties[*family as usize].queue_flags;
+            count < priorities.len() && !flags.contains(VK_QUEUE_GRAPHICS_BIT)
+        }) {
+            return Err(VkResult::VK_ERROR_VALIDATION_FAILED_EXT);
+        }
 
         let nqueues = queue_priorities.iter()
             .map(|(family, priorities)| {(*family, priorities.len() as u32)})

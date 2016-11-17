@@ -71,6 +71,19 @@ pub struct PhysicalDevice<'a> {
 
 impl<'a> PhysicalDevice<'a> {
     pub fn handle(&self) -> &VkPhysicalDevice {&self.handle}
+
+    pub fn queue_family_properties(&self) -> Vec<VkQueueFamilyProperties> {
+        let mut nqueues = 0;
+        unsafe {vkGetPhysicalDeviceQueueFamilyProperties(self.handle, &mut nqueues, ptr::null_mut())};
+        let mut properties = Vec::<VkQueueFamilyProperties>::with_capacity(nqueues as usize);
+        unsafe {
+            vkGetPhysicalDeviceQueueFamilyProperties(self.handle,
+                                                     &mut (properties.capacity() as u32),
+                                                     properties.as_mut_ptr());
+            properties.set_len(nqueues as usize);
+        };
+        properties
+    }
 }
 
 pub fn debug_instance() -> Instance {
@@ -109,6 +122,18 @@ mod tests {
         let instance = debug_instance();
         let (errs, dbg) = debug_monitor(&instance);
         assert!(instance.devices().unwrap().len() > 0);
+        drop(dbg);
+        assert!(!errs.load(Ordering::Relaxed));
+    }
+
+    #[test]
+    fn queue_family_properties() {
+        let instance = debug_instance();
+        let (errs, dbg) = debug_monitor(&instance);
+        let ref device = instance.devices().unwrap()[0];
+        assert!(device.queue_family_properties().len() > 0);
+        assert!(device.queue_family_properties()[0].queue_count > 0);
+
         drop(dbg);
         assert!(!errs.load(Ordering::Relaxed));
     }
