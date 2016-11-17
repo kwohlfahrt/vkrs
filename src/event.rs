@@ -66,7 +66,7 @@ mod test {
     #[test]
     fn create_event() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
@@ -80,7 +80,7 @@ mod test {
     #[test]
     fn test_event() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
@@ -95,7 +95,7 @@ mod test {
     #[test]
     fn set_event() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()
@@ -112,7 +112,7 @@ mod test {
     #[test]
     fn reset_event() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<_, _>>();
             Device::new(&instance.devices().unwrap()[0], priorities).unwrap()

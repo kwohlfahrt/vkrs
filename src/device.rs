@@ -121,7 +121,7 @@ mod tests {
     fn create_device() {
         // Slightly convoluted, ensures lifetimes are correct
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
 
         let device = {
             let physical_devices = instance.devices().unwrap();
@@ -136,7 +136,7 @@ mod tests {
     #[test]
     fn get_queue() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
 
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<u32, Vec<QueuePriority>>>();
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn get_invalid_queue() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
 
         let device = {
             let priorities = vec!((0, vec!(QueuePriority::from_float_clamped(1.0)))).into_iter().collect::<HashMap<u32, Vec<QueuePriority>>>();

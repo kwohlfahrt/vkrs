@@ -104,7 +104,7 @@ pub fn stderr_printer(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportOb
 
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
-pub fn debug_monitor(instance: &Instance) -> (Arc<AssertUnwindSafe<AtomicBool>>, DebugReportCallbackEXT) {
+pub fn debug_monitor(instance: &Instance, warnings: bool) -> (Arc<AssertUnwindSafe<AtomicBool>>, DebugReportCallbackEXT) {
     use std::sync::atomic::Ordering;
     let flag = Arc::new(AssertUnwindSafe(AtomicBool::new(false)));
     let closure = {
@@ -114,9 +114,12 @@ pub fn debug_monitor(instance: &Instance) -> (Arc<AssertUnwindSafe<AtomicBool>>,
             VkBool32::False
         }
     };
-    let flags = VkDebugReportFlagsEXT::all()
+    let mut flags = VkDebugReportFlagsEXT::all()
         ^ VK_DEBUG_REPORT_DEBUG_BIT_EXT
         ^ VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+    if !warnings {
+        flags.remove(VK_DEBUG_REPORT_WARNING_BIT_EXT);
+    }
     (flag, DebugReportCallbackEXT::new(instance, closure, flags).unwrap())
 }
 
@@ -175,7 +178,7 @@ mod tests {
     #[test]
     fn debug_monitor_ok() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
         drop(dbg);
         assert!(!errs.load(Ordering::Relaxed))
     }
@@ -186,7 +189,7 @@ mod tests {
         use std::ffi::CString;
 
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
         dbg.message(VK_DEBUG_REPORT_ERROR_BIT_EXT, VkDebugReportObjectTypeEXT::VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT, 0, 0, 0, &CString::new("").unwrap(), &CString::new("monitor").unwrap());
         drop(dbg);
         assert!(errs.load(Ordering::Relaxed))

@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn enumerate_devices() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
         assert!(instance.devices().unwrap().len() > 0);
         drop(dbg);
         assert!(!errs.load(Ordering::Relaxed));
@@ -129,7 +129,7 @@ mod tests {
     #[test]
     fn queue_family_properties() {
         let instance = debug_instance();
-        let (errs, dbg) = debug_monitor(&instance);
+        let (errs, dbg) = debug_monitor(&instance, true);
         let ref device = instance.devices().unwrap()[0];
         assert!(device.queue_family_properties().len() > 0);
         assert!(device.queue_family_properties()[0].queue_count > 0);
