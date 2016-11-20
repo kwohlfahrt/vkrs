@@ -135,8 +135,10 @@ mod tests {
 
     #[test]
     fn create_debug_report() {
+        use sys::debug::{VK_DEBUG_REPORT_DEBUG_BIT_EXT, VK_DEBUG_REPORT_INFORMATION_BIT_EXT};
         let instance = debug_instance();
-        assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, DebugReportFlagsEXT::all()).is_ok());
+        let flags = DebugReportFlagsEXT::all() ^ VK_DEBUG_REPORT_DEBUG_BIT_EXT ^ VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+        assert!(DebugReportCallbackEXT::new(&instance, stderr_printer, flags).is_ok());
     }
 
     #[test]
