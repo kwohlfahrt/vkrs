@@ -140,6 +140,7 @@ impl Default for VkBool32 {
     }
 }
 
+#[repr(C)]
 pub struct VkExtent3D {
     pub width: uint32_t,
     pub height: uint32_t,

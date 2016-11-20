@@ -130,7 +130,7 @@ mod tests {
     fn queue_family_properties() {
         let instance = debug_instance();
         let (errs, dbg) = debug_monitor(&instance, true);
-        let ref device = instance.devices().unwrap()[0];
+        let device = &instance.devices().unwrap()[0];
         assert!(device.queue_family_properties().len() > 0);
         assert!(device.queue_family_properties()[0].queue_count > 0);
 

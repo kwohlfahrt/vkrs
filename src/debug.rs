@@ -19,11 +19,13 @@ pub struct DebugReportCallbackEXT<'a, 'b> {
     destructor: PFNvkDestroyDebugReportCallbackEXT,
     message: PFNvkDebugReportMessageEXT,
     #[allow(dead_code)] // used in callback_handler
+    #[allow(type_complexity)]
     callback: Box<Box<Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync>>,
 }
 
 #[allow(too_many_arguments)]
 extern fn callback_handler(flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, p_layer_prefix: *const c_char, p_message: *const c_char, p_user_data: *mut c_void) -> VkBool32 {
+    #[allow(type_complexity)]
     let closure: &Box<Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + Sync>
         = unsafe {&*(p_user_data as *const Box<_>)};
     let message = unsafe{CStr::from_ptr(p_message)};
@@ -34,6 +36,7 @@ extern fn callback_handler(flags: VkDebugReportFlagsEXT, object_type: VkDebugRep
 }
 
 impl<'a, 'b> DebugReportCallbackEXT<'a, 'b> {
+    #[allow(type_complexity)]
     pub fn new<F>(instance: &'a Instance, callback: F, flags: VkDebugReportFlagsEXT) -> Result<Self, VkResult>
         where F: Fn(VkDebugReportFlagsEXT, VkDebugReportObjectTypeEXT, uint64_t, size_t, int32_t, &CStr, &CStr) -> VkBool32 + 'b + Sync + UnwindSafe
     {
@@ -82,6 +85,7 @@ impl<'a, 'b> DebugReportCallbackEXT<'a, 'b> {
 
     // FIXME: This acts per-instance, not per-callback.
     // Move to Instance? Add a trait to Instance?
+    #[allow(too_many_arguments)]
     pub fn message(&self, flags: VkDebugReportFlagsEXT, object_type: VkDebugReportObjectTypeEXT, object: uint64_t, location: size_t, message_code: int32_t, layer_prefix: &CStr, message: &CStr) {
         (self.message)(*self.instance.handle(), flags, object_type, object, location, message_code, layer_prefix.as_ptr(), message.as_ptr());
     }
